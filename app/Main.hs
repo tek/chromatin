@@ -1,6 +1,6 @@
-module Main where
+import Neovim
 
-import Lib
+import Chromatin.Plugin (plugin)
 
 main :: IO ()
-main = someFunc
+main = neovim defaultConfig {plugins = [plugin]}

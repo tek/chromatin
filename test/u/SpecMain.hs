@@ -2,6 +2,7 @@
 
 module Main where
 
+import {-@ HTF_TESTS @-} DiagSpec
 import Test.Framework
 import Test.Framework.BlackBoxTest ()
 

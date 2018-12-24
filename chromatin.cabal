@@ -4,39 +4,52 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 636e559cef253036f7ec1f5b9b326d44d45df170d4c18f997d5f190227e04dbd
+-- hash: 1e9a57a214290a02227b70b807246b8ac1821b630b3930f8fd765dbd37980cb9
 
 name:           chromatin
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/chromatin#readme>
-homepage:       https://github.com/githubuser/chromatin#readme
-bug-reports:    https://github.com/githubuser/chromatin/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2018 Author name here
-license:        BSD3
+synopsis:       neovim package manager
+description:    Please see the README on GitHub at <https://github.com/tek/chromatin-hs>
+category:       Neovim
+homepage:       https://github.com/tek/chromatin-hs#readme
+bug-reports:    https://github.com/tek/chromatin-hs/issues
+author:         Torsten Schmits
+maintainer:     tek@tryp.io
+copyright:      2018 Torsten Schmits
+license:        MIT
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
-    ChangeLog.md
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/chromatin
+  location: https://github.com/tek/chromatin-hs
 
 library
   exposed-modules:
-      Lib
+      Chromatin.Data.Chromatin
+      Chromatin.Data.Env
+      Chromatin.Diag
+      Chromatin.Init
+      Chromatin.Plugin
+      Chromatin.Test.Config
+      Chromatin.Test.Unit
   other-modules:
       Paths_chromatin
   hs-source-dirs:
-      src
+      lib
   build-depends:
       base >=4.7 && <5
+    , data-default-class
+    , hslogger
+    , lens
+    , nvim-hs
+    , proteome
+    , unliftio
   default-language: Haskell2010
 
-executable chromatin-exe
+executable chromatin
   main-is: Main.hs
   other-modules:
       Paths_chromatin
@@ -46,17 +59,52 @@ executable chromatin-exe
   build-depends:
       base >=4.7 && <5
     , chromatin
+    , data-default-class
+    , hslogger
+    , lens
+    , nvim-hs
+    , proteome
+    , unliftio
   default-language: Haskell2010
 
-test-suite chromatin-test
+test-suite chromatin-functional
   type: exitcode-stdio-1.0
-  main-is: Spec.hs
+  main-is: SpecMain.hs
   other-modules:
       Paths_chromatin
   hs-source-dirs:
-      test
+      test/f
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      HTF
+    , base >=4.7 && <5
     , chromatin
+    , data-default-class
+    , hslogger
+    , lens
+    , nvim-hs
+    , proteome
+    , unliftio
+  default-language: Haskell2010
+
+test-suite chromatin-unit
+  type: exitcode-stdio-1.0
+  main-is: SpecMain.hs
+  other-modules:
+      Config
+      DiagSpec
+      Paths_chromatin
+  hs-source-dirs:
+      test/u
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HTF
+    , base >=4.7 && <5
+    , chromatin
+    , data-default-class
+    , hslogger
+    , lens
+    , nvim-hs
+    , proteome
+    , unliftio
   default-language: Haskell2010
