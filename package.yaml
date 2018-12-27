@@ -22,6 +22,15 @@ dependencies:
 - data-default-class
 - lens
 - hslogger
+- deepseq
+- messagepack
+- prettyprinter
+- containers
+- parsec
+- conduit
+- stm-conduit
+- stm-chans
+- resourcet
 
 library:
  source-dirs: lib

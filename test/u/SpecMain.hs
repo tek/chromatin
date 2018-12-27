@@ -3,6 +3,8 @@
 module Main where
 
 import {-@ HTF_TESTS @-} DiagSpec
+import {-@ HTF_TESTS @-} RebuildSpec
+import {-@ HTF_TESTS @-} ConfigSpec
 import Test.Framework
 import Test.Framework.BlackBoxTest ()
 

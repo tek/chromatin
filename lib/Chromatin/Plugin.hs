@@ -20,13 +20,15 @@ import Ribosome.Data.Ribosome (Ribosome)
 import Chromatin.Init (initialize)
 import Chromatin.Data.Env (Env)
 import Chromatin.Diag (crmDiag)
+import Chromatin.Rebuild (crmRebuild)
 
 plugin' :: Ribosome (TVar Env) -> Plugin (Ribosome (TVar Env))
 plugin' env =
   Plugin {
     environment = env,
     exports = [
-      $(command' 'crmDiag) []
+      $(command' 'crmDiag) [],
+      $(command' 'crmRebuild) []
     ]
   }
 

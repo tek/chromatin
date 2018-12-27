@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1e9a57a214290a02227b70b807246b8ac1821b630b3930f8fd765dbd37980cb9
+-- hash: b984e19aac5fecd774a5d0976e724a793b2604c25591924a263577ccbdfad496
 
 name:           chromatin
 version:        0.1.0.0
@@ -28,24 +28,44 @@ source-repository head
 
 library
   exposed-modules:
+      Chromatin.Config
       Chromatin.Data.Chromatin
       Chromatin.Data.Env
+      Chromatin.Data.Rplugin
+      Chromatin.Data.RpluginConfig
+      Chromatin.Data.RpluginName
+      Chromatin.Data.Rplugins
+      Chromatin.Data.RpluginSource
       Chromatin.Diag
       Chromatin.Init
+      Chromatin.Install
+      Chromatin.Log
       Chromatin.Plugin
+      Chromatin.Rebuild
+      Chromatin.Settings
       Chromatin.Test.Config
       Chromatin.Test.Unit
+      Chromatin.Unload
   other-modules:
       Paths_chromatin
   hs-source-dirs:
       lib
   build-depends:
       base >=4.7 && <5
+    , conduit
+    , containers
     , data-default-class
+    , deepseq
     , hslogger
     , lens
+    , messagepack
     , nvim-hs
+    , parsec
+    , prettyprinter
     , proteome
+    , resourcet
+    , stm-chans
+    , stm-conduit
     , unliftio
   default-language: Haskell2010
 
@@ -59,11 +79,20 @@ executable chromatin
   build-depends:
       base >=4.7 && <5
     , chromatin
+    , conduit
+    , containers
     , data-default-class
+    , deepseq
     , hslogger
     , lens
+    , messagepack
     , nvim-hs
+    , parsec
+    , prettyprinter
     , proteome
+    , resourcet
+    , stm-chans
+    , stm-conduit
     , unliftio
   default-language: Haskell2010
 
@@ -79,11 +108,20 @@ test-suite chromatin-functional
       HTF
     , base >=4.7 && <5
     , chromatin
+    , conduit
+    , containers
     , data-default-class
+    , deepseq
     , hslogger
     , lens
+    , messagepack
     , nvim-hs
+    , parsec
+    , prettyprinter
     , proteome
+    , resourcet
+    , stm-chans
+    , stm-conduit
     , unliftio
   default-language: Haskell2010
 
@@ -92,7 +130,9 @@ test-suite chromatin-unit
   main-is: SpecMain.hs
   other-modules:
       Config
+      ConfigSpec
       DiagSpec
+      RebuildSpec
       Paths_chromatin
   hs-source-dirs:
       test/u
@@ -101,10 +141,19 @@ test-suite chromatin-unit
       HTF
     , base >=4.7 && <5
     , chromatin
+    , conduit
+    , containers
     , data-default-class
+    , deepseq
     , hslogger
     , lens
+    , messagepack
     , nvim-hs
+    , parsec
+    , prettyprinter
     , proteome
+    , resourcet
+    , stm-chans
+    , stm-conduit
     , unliftio
   default-language: Haskell2010
