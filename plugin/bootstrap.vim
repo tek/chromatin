@@ -69,7 +69,7 @@ endfunction "}}}
 
 function! s:check_executable_finished(code, output) abort "{{{
   if a:code == 0
-    return index(a:output, 'No executables to be installed.') >= 0 ? s:run_chromatin(1) : s:install_chromatin()
+    return index(a:output, 'Nothing to build.') >= 0 ? s:run_chromatin(1) : s:install_chromatin()
   else
     return s:error('checking project status failed: ' . string(a:output))
   endif
