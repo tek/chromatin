@@ -61,7 +61,7 @@ endfunction "}}}
 
 function! s:check_executable_finished(stack, code, output) abort "{{{
   if a:code == 0
-    return index(a:output, 'Nothing to build.') >= 0 ? s:run_chromatin(a:stack, 1) : s:install_chromatin()
+    return index(a:output, 'Nothing to build.') >= 0 ? s:run_chromatin(a:stack, 1) : s:install_chromatin(a:stack)
   else
     return s:error('checking project status failed: ' . string(a:output))
   endif
@@ -101,7 +101,5 @@ function! s:bootstrap() abort "{{{
 endfunction "}}}
 
 if get(g:, 'chromatin_autobootstrap', 1)
-  if get(g:, 'chromatin_haskell', 0) || $CHROMATIN_HASKELL != ''
-    call s:bootstrap()
-  endif
+  call s:bootstrap()
 endif
