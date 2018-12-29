@@ -16,6 +16,7 @@ import Chromatin.Data.Rplugin (Rplugin)
 import Chromatin.Data.RpluginName (RpluginName)
 import Chromatin.Data.RpluginSource (RpluginSource)
 
+
 data InstallTask =
   Install RpluginName RpluginSource
   |

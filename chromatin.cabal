@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b984e19aac5fecd774a5d0976e724a793b2604c25591924a263577ccbdfad496
+-- hash: 19b360f0d0db44103f536abab404f189550ad9f9ea4cd1ecd118bb9d310fdfb4
 
 name:           chromatin
 version:        0.1.0.0
@@ -29,6 +29,7 @@ source-repository head
 library
   exposed-modules:
       Chromatin.Config
+      Chromatin.Data.ActiveRplugin
       Chromatin.Data.Chromatin
       Chromatin.Data.Env
       Chromatin.Data.Rplugin
@@ -42,6 +43,7 @@ library
       Chromatin.Log
       Chromatin.Plugin
       Chromatin.Rebuild
+      Chromatin.Run
       Chromatin.Settings
       Chromatin.Test.Config
       Chromatin.Test.Unit
@@ -52,20 +54,25 @@ library
       lib
   build-depends:
       base >=4.7 && <5
+    , bytestring
     , conduit
     , containers
     , data-default-class
     , deepseq
+    , directory
+    , filepath
     , hslogger
     , lens
     , messagepack
     , nvim-hs
     , parsec
     , prettyprinter
-    , proteome
     , resourcet
+    , ribosome
+    , split
     , stm-chans
     , stm-conduit
+    , typed-process
     , unliftio
   default-language: Haskell2010
 
@@ -78,21 +85,26 @@ executable chromatin
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , bytestring
     , chromatin
     , conduit
     , containers
     , data-default-class
     , deepseq
+    , directory
+    , filepath
     , hslogger
     , lens
     , messagepack
     , nvim-hs
     , parsec
     , prettyprinter
-    , proteome
     , resourcet
+    , ribosome
+    , split
     , stm-chans
     , stm-conduit
+    , typed-process
     , unliftio
   default-language: Haskell2010
 
@@ -107,21 +119,26 @@ test-suite chromatin-functional
   build-depends:
       HTF
     , base >=4.7 && <5
+    , bytestring
     , chromatin
     , conduit
     , containers
     , data-default-class
     , deepseq
+    , directory
+    , filepath
     , hslogger
     , lens
     , messagepack
     , nvim-hs
     , parsec
     , prettyprinter
-    , proteome
     , resourcet
+    , ribosome
+    , split
     , stm-chans
     , stm-conduit
+    , typed-process
     , unliftio
   default-language: Haskell2010
 
@@ -132,7 +149,9 @@ test-suite chromatin-unit
       Config
       ConfigSpec
       DiagSpec
+      InstallSpec
       RebuildSpec
+      RunSpec
       Paths_chromatin
   hs-source-dirs:
       test/u
@@ -140,20 +159,25 @@ test-suite chromatin-unit
   build-depends:
       HTF
     , base >=4.7 && <5
+    , bytestring
     , chromatin
     , conduit
     , containers
     , data-default-class
     , deepseq
+    , directory
+    , filepath
     , hslogger
     , lens
     , messagepack
     , nvim-hs
     , parsec
     , prettyprinter
-    , proteome
     , resourcet
+    , ribosome
+    , split
     , stm-chans
     , stm-conduit
+    , typed-process
     , unliftio
   default-language: Haskell2010

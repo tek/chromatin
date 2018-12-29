@@ -59,9 +59,13 @@ function! s:push_output(store, data) abort "{{{
   return extend(a:store, a:data)
 endfunction "}}}
 
+function! s:project_dirty(output) abort "{{{
+  return index(a:output, 'Would build:') >= 0
+endfunction "}}}
+
 function! s:check_executable_finished(stack, code, output) abort "{{{
   if a:code == 0
-    return index(a:output, 'Nothing to build.') >= 0 ? s:run_chromatin(a:stack, 1) : s:install_chromatin(a:stack)
+    return s:project_dirty(a:output) ? s:install_chromatin(a:stack) : s:run_chromatin(a:stack, 1)
   else
     return s:error('checking project status failed: ' . string(a:output))
   endif

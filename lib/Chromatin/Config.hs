@@ -8,7 +8,8 @@ module Chromatin.Config(
 import Data.Maybe (fromMaybe)
 import Data.Foldable (find)
 import Text.ParserCombinators.Parsec
-import qualified Ribosome.Data.Ribo as Ribo (inspect)
+import System.FilePath (takeFileName)
+import qualified Ribosome.Control.Ribo as Ribo (inspect)
 import Ribosome.Config.Setting (setting)
 import Chromatin.Data.Chromatin (Chromatin)
 import qualified Chromatin.Data.Env as Env (rplugins)
@@ -53,9 +54,10 @@ parseSpec = parse specParser "none"
 sourceFromSpec :: String -> Either String RpluginSource
 sourceFromSpec spec =
   case parseSpec spec of
-    Right (PrefixedSpec prefix name') -> case prefix of
-      "pip" -> Right $ Pypi (PypiDepspec name')
-      "hackage" -> Right $ Hackage (HackageDepspec name')
+    Right (PrefixedSpec prefix spec') -> case prefix of
+      "pip" -> Right $ Pypi (PypiDepspec spec')
+      "hackage" -> Right $ Hackage (HackageDepspec spec')
+      "stack" -> Right $ Stack spec'
       a -> Left $ "unknown rplugin prefix `" ++ a ++ "` in `" ++ spec ++ "`"
     Right (PlainSpec name') ->
       Right $ Hackage (HackageDepspec name')
@@ -66,6 +68,7 @@ rpluginHasName target (Rplugin name _) = target == name
 
 nameFromSource :: RpluginSource -> RpluginName
 nameFromSource (Hackage (HackageDepspec n)) = RpluginName n
+nameFromSource (Stack fp) = RpluginName (takeFileName fp)
 nameFromSource (Pypi (PypiDepspec n)) = RpluginName n
 
 modifyExisting :: RpluginSource -> Rplugin -> RpluginModification

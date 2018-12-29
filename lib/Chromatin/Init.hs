@@ -8,13 +8,15 @@ import Control.Monad.IO.Class (liftIO)
 import UnliftIO.STM (TVar)
 import Neovim (Neovim)
 import Neovim.Context.Internal (Config(customConfig), asks')
-import Ribosome.Data.Ribosome (newRibosome, Ribosome)
+import Ribosome.Control.Ribosome (newRibosome, Ribosome)
 import Ribosome.Internal.IO (retypeNeovim)
 import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Env (Env)
+import Chromatin.Rebuild (crmRebuild)
 
 initialize' :: Chromatin (Ribosome (TVar Env))
-initialize' =
+initialize' = do
+  crmRebuild def
   asks' customConfig
 
 initialize :: Neovim e (Ribosome (TVar Env))

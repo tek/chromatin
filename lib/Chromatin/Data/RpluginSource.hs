@@ -17,6 +17,10 @@ data RpluginSource =
     hackageSpec :: HackageDepspec
   }
   |
+  Stack {
+    stackProject :: FilePath
+  }
+  |
   Pypi {
     pypiSpec :: PypiDepspec
   }

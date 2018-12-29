@@ -10,17 +10,19 @@ import Data.Foldable (traverse_)
 import UnliftIO (atomically)
 import UnliftIO.STM (TVar, STM)
 import Neovim (CommandArguments)
-import Ribosome.Data.Ribo (Ribo)
-import qualified Ribosome.Data.Ribo as Ribo (inspect, modify)
+import Ribosome.Control.Ribo (Ribo)
+import qualified Ribosome.Control.Ribo as Ribo (inspect, modify)
 import Ribosome.Internal.IO (forkNeovim)
 import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Env (Env, InstallTask(..))
 import qualified Chromatin.Data.Env as Env (installerChan, _installerChan)
-import Chromatin.Data.Rplugin (Rplugin)
 import Chromatin.Data.RpluginName (RpluginName)
 import Chromatin.Data.RpluginSource (RpluginSource)
 import Chromatin.Config (readConfig, analyzeConfigIO, RpluginModification(RpluginNew))
-import Chromatin.Install (installRplugin)
+import Chromatin.Install (installRplugin, InstallResult)
+import qualified Chromatin.Install as InstallResult (InstallResult(..))
+import Chromatin.Run (runRplugin, RunResult(..))
+import qualified Chromatin.Run as RunResult (RunResult(..))
 import qualified Chromatin.Log as Log
 
 mapMChan :: Chromatin a -> (TBMChan InstallTask -> Chromatin a) -> Chromatin a
@@ -35,22 +37,26 @@ stopInstaller =
     atomically $ closeTBMChan c
     Log.debug "stopped installer conduit"
 
-handleInstallTask :: InstallTask -> Chromatin (Either String Rplugin)
-handleInstallTask Stop = stopInstaller >> return (Left "done")
-handleInstallTask task = installRplugin task
+handleInstallTask :: InstallTask -> Chromatin InstallResult
+handleInstallTask Stop = stopInstaller >> return (InstallResult.Failure [])
+handleInstallTask (Install name source) = installRplugin name source
 
-handleInstallTaskC :: ConduitT InstallTask (Either String Rplugin) (Ribo (TVar Env)) ()
-handleInstallTaskC = mapMC handleInstallTask
+installerC :: ConduitT InstallTask InstallResult (Ribo (TVar Env)) ()
+installerC = mapMC handleInstallTask
 
-installerC :: ConduitT InstallTask (Either String Rplugin) (Ribo (TVar Env)) ()
-installerC = handleInstallTaskC
+runInstallResult :: InstallResult -> Chromatin RunResult
+runInstallResult (InstallResult.Failure err) = return $ RunResult.Failure err
+runInstallResult (InstallResult.Success rplugin) = runRplugin rplugin
+
+runnerC :: ConduitT InstallResult RunResult (Ribo (TVar Env)) ()
+runnerC = mapMC runInstallResult
 
 createChan :: STM (TBMChan InstallTask)
 createChan = newTBMChan 64
 
 runInstaller :: TBMChan InstallTask -> Chromatin ()
 runInstaller chan = do
-  r <- runConduit $ sourceTBMChan chan .| installerC .| sinkList
+  r <- runConduit $ sourceTBMChan chan .| installerC .| runnerC .| sinkList
   Log.debug $ "installer terminated: " ++ show r
 
 forkInstaller :: Chromatin (TBMChan InstallTask)

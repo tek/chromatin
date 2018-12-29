@@ -5,6 +5,8 @@ module Main where
 import {-@ HTF_TESTS @-} DiagSpec
 import {-@ HTF_TESTS @-} RebuildSpec
 import {-@ HTF_TESTS @-} ConfigSpec
+import {-@ HTF_TESTS @-} InstallSpec
+import {-@ HTF_TESTS @-} RunSpec
 import Test.Framework
 import Test.Framework.BlackBoxTest ()
 

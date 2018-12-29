@@ -16,9 +16,9 @@ extra-source-files:
 
 dependencies:
 - base >= 4.7 && < 5
-- unliftio
+- ribosome
 - nvim-hs
-- proteome
+- unliftio
 - data-default-class
 - lens
 - hslogger
@@ -31,6 +31,12 @@ dependencies:
 - stm-conduit
 - stm-chans
 - resourcet
+- bytestring
+- typed-process
+- filepath
+- directory
+- split
+- messagepack
 
 library:
  source-dirs: lib

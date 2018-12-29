@@ -4,7 +4,7 @@ module Chromatin.Unload(
 
 import Data.Foldable (traverse_)
 import qualified Control.Lens as Lens (over)
-import qualified Ribosome.Data.Ribo as Ribo (modify)
+import qualified Ribosome.Control.Ribo as Ribo (modify)
 import Chromatin.Data.Rplugin (Rplugin)
 import Chromatin.Data.Chromatin (Chromatin)
 import qualified Chromatin.Data.Env as Env (_rplugins)
