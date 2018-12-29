@@ -53,7 +53,7 @@ function! s:run_chromatin(stack, ...) abort "{{{
 endfunction "}}}
 
 function! s:install_chromatin(stack) abort "{{{
-  echom 'chromatin: installing chromatin…'
+  echom 'chromatin: building chromatin…'
   return s:job(a:stack . ' build', 'install-chromatin', { -> s:run_chromatin(a:stack) }, 'failed to install chromatin')
 endfunction "}}}
 

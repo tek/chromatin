@@ -37,6 +37,8 @@ dependencies:
 - directory
 - split
 - messagepack
+- transformers
+- Glob
 
 library:
  source-dirs: lib

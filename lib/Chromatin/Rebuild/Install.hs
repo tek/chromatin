@@ -1,4 +1,4 @@
-module Chromatin.Install(
+module Chromatin.Rebuild.Install(
   installRplugin,
   InstallResult(..),
   venvDir,
@@ -56,7 +56,7 @@ hackageProcess bindir (HackageDepspec spec) =
 
 stackProcess :: FilePath -> ProcessConfig () () ()
 stackProcess path =
-  setWorkingDir path $ proc "stack" ["build", "--dry-run"]
+  setWorkingDir path $ proc "stack" ["build"]
 
 processWithLog :: RpluginName -> ProcessConfig stdin stdout sderr -> Chromatin (Either String ())
 processWithLog (RpluginName name) processConfig =
