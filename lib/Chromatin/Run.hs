@@ -10,6 +10,7 @@ import Neovim (NeovimException, toObject, fromObject', vim_call_function')
 import qualified Neovim as NeovimException (NeovimException(ErrorMessage, ErrorResult))
 import qualified Data.Map as Map (fromList)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
+import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.ActiveRplugin (ActiveRplugin(ActiveRplugin))
 import Chromatin.Data.RpluginSource (RpluginSource(Stack))
 import Chromatin.Data.Chromatin (Chromatin)
@@ -33,18 +34,18 @@ jobstart :: [Object] -> Chromatin (Either String Int)
 jobstart args =
   catch (Right <$> unsafeJobstart args) (return . jobstartFailure)
 
-runRpluginStack :: FilePath -> Chromatin (Either String Int)
-runRpluginStack path = do
+runRpluginStack :: RpluginName -> FilePath -> Chromatin (Either String Int)
+runRpluginStack (RpluginName name) path = do
   let opts = Map.fromList [("cwd", toObject path), ("rpc", toObject True)]
-  jobstart [toObject "stack exec", toObject opts]
+  jobstart [toObject $ "stack exec " ++ name, toObject opts]
 
-runRplugin' :: RpluginSource -> Chromatin (Either String Int)
-runRplugin' (Stack path) = runRpluginStack path
-runRplugin' _ = return (Left "NI")
+runRplugin' :: RpluginName -> RpluginSource -> Chromatin (Either String Int)
+runRplugin' name (Stack path) = runRpluginStack name path
+runRplugin' _ _ = return (Left "NI")
 
 runRplugin :: Rplugin -> Chromatin RunResult
-runRplugin rplugin@(Rplugin _ source) = do
-  result <- runRplugin' source
+runRplugin rplugin@(Rplugin name source) = do
+  result <- runRplugin' name source
   return $ case result of
     Right channelId -> Success (ActiveRplugin channelId rplugin)
     Left err -> Failure (linesBy (=='\n') err)
