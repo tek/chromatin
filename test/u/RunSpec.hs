@@ -15,7 +15,7 @@ import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.RpluginSource (RpluginSource(Stack))
 import Chromatin.Test.Unit (specWithDef)
 import Chromatin.Run (runRplugin)
-import qualified Chromatin.Run as RunResult (RunResult(Success))
+import qualified Chromatin.Run as RunRpluginResult (RunRpluginResult(Success))
 import Config (vars)
 
 runSpec :: Chromatin ()
@@ -25,7 +25,7 @@ runSpec = do
   result <- runRplugin rplugin
   _ <- vim_command "sleep 500m"
   exists <- vim_call_function' "exists" [toObject ":CrmDiag"]
-  liftIO $ assertEqual (RunResult.Success (ActiveRplugin 3 rplugin)) result
+  liftIO $ assertEqual (RunRpluginResult.Success (ActiveRplugin 3 rplugin)) result
   liftIO $ assertEqual (toObject (2 :: Int)) exists
 
 test_run :: IO ()

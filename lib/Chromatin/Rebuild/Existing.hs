@@ -7,7 +7,6 @@ import qualified Data.ByteString.Lazy.Internal as B (unpackChars)
 import Data.List.Split (linesBy)
 import System.Process.Typed (readProcessStderr, proc, setWorkingDir)
 import UnliftIO (tryIO)
-import Ribosome.Api.Echo (echomS)
 import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.RebuildTask (RebuildTask(..))
 import Chromatin.Data.RunExistingResult (RunExistingResult)
@@ -41,7 +40,6 @@ rpluginReady _ (Stack path) = do
     Left err -> RpluginState.Broken $ "could not execute `stack build` in " ++ path ++ ": " ++ show err
 rpluginReady name (Pypi _) = do
   package <- pypiPluginPackage name
-  echomS package
   return $ maybe RpluginState.Incomplete (const RpluginState.Ready) package
 rpluginReady _ _ = return $ RpluginState.Broken "NI"
 

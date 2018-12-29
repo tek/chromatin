@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 777a00d98070ab267915b5c7bbb96bfd5477b05836d0af4d10f43c6131a471fa
+-- hash: 6866bb806dd24192cf51dba03b3846e4a04c113e07781a16804ef1cc7b8e2508
 
 name:           chromatin
-version:        0.1.0.0
+version:        0.0.0.1
 synopsis:       neovim package manager
 description:    Please see the README on GitHub at <https://github.com/tek/chromatin-hs>
 category:       Neovim
@@ -160,10 +160,10 @@ test-suite chromatin-unit
   type: exitcode-stdio-1.0
   main-is: SpecMain.hs
   other-modules:
+      BuildSpec
       Config
       ConfigSpec
       DiagSpec
-      InstallSpec
       RebuildSpec
       RunSpec
       Paths_chromatin

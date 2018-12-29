@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 
-module InstallSpec(
+module BuildSpec(
   htf_thisModulesTests
 ) where
 
