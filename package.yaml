@@ -1,5 +1,5 @@
 name: chromatin
-version: 0.0.0.1
+version: 0.1.0.0
 synopsis: neovim package manager
 description: Please see the README on GitHub at <https://github.com/tek/chromatin-hs>
 github: "tek/chromatin-hs"
