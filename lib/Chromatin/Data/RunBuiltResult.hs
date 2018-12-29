@@ -1,11 +1,11 @@
-module Chromatin.Data.RunInstalledResult(
-  RunInstalledResult(..),
+module Chromatin.Data.RunBuiltResult(
+  RunBuiltResult(..),
 ) where
 
 import Chromatin.Data.ActiveRplugin (ActiveRplugin)
 import Chromatin.Data.RebuildTask (RebuildTask)
 
-data RunInstalledResult =
+data RunBuiltResult =
   Success ActiveRplugin
   |
   Failure {

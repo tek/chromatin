@@ -1,4 +1,4 @@
-module Chromatin.Rebuild.Install(
+module Chromatin.Rebuild.Build(
   installRplugin,
   InstallResult(..),
   venvDir,

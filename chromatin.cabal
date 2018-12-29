@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 572035413d9859f98e718e1e8115147d12a34f12903dd62be0217e0ceff2e79b
+-- hash: 777a00d98070ab267915b5c7bbb96bfd5477b05836d0af4d10f43c6131a471fa
 
 name:           chromatin
 version:        0.1.0.0
@@ -41,15 +41,15 @@ library
       Chromatin.Data.Rplugins
       Chromatin.Data.RpluginSource
       Chromatin.Data.RpluginState
+      Chromatin.Data.RunBuiltResult
       Chromatin.Data.RunExistingResult
-      Chromatin.Data.RunInstalledResult
       Chromatin.Diag
       Chromatin.Init
       Chromatin.Log
       Chromatin.Plugin
       Chromatin.Rebuild
+      Chromatin.Rebuild.Build
       Chromatin.Rebuild.Existing
-      Chromatin.Rebuild.Install
       Chromatin.Rebuild.Nonexisting
       Chromatin.Run
       Chromatin.Settings

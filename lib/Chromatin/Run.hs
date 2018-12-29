@@ -18,7 +18,7 @@ import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.ActiveRplugin (ActiveRplugin(ActiveRplugin))
 import Chromatin.Data.RpluginSource (RpluginSource(Stack, Pypi))
 import Chromatin.Data.Chromatin (Chromatin)
-import Chromatin.Rebuild.Install (venvDir)
+import Chromatin.Rebuild.Build (venvDir)
 
 data RunRpluginResult =
   Success ActiveRplugin

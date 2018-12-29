@@ -25,8 +25,8 @@ import Chromatin.Data.RebuildTask (RebuildTask(..))
 import Chromatin.Data.RebuildControl (RebuildControl)
 import qualified Chromatin.Data.RebuildControl as RebuildControl (RebuildControl(..))
 import Chromatin.Data.RunExistingResult (RunExistingResult)
-import Chromatin.Data.RunInstalledResult (RunInstalledResult)
-import qualified Chromatin.Data.RunInstalledResult as RunInstalledResult (RunInstalledResult(..))
+import Chromatin.Data.RunBuiltResult (RunBuiltResult)
+import qualified Chromatin.Data.RunBuiltResult as RunBuiltResult (RunBuiltResult(..))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.RpluginSource (RpluginSource)
 import Chromatin.Config (readConfig, analyzeConfigIO, RpluginModification(RpluginNew))
@@ -49,11 +49,11 @@ stopRebuilder =
 createChan :: STM (TBMChan RebuildControl)
 createChan = newTBMChan 64
 
-extractFailure :: RunInstalledResult -> [String]
-extractFailure (RunInstalledResult.Failure (RebuildTask (RpluginName name) _) err) =
+extractFailure :: RunBuiltResult -> [String]
+extractFailure (RunBuiltResult.Failure (RebuildTask (RpluginName name) _) err) =
   ("error when runnning plugin `" ++ name ++ "`:") : err
-extractFailure (RunInstalledResult.Success _) = []
-extractFailure (RunInstalledResult.PreviousFailure stage (RebuildTask (RpluginName name) _) err) =
+extractFailure (RunBuiltResult.Success _) = []
+extractFailure (RunBuiltResult.PreviousFailure stage (RebuildTask (RpluginName name) _) err) =
   ("error in stage `" ++ stage ++ "` for plugin `" ++ name ++ "`:") : err
 
 controlC :: ConduitT RebuildControl RebuildTask (Ribo (TVar Env)) ()
@@ -67,10 +67,10 @@ controlC = do
 handleExistingC :: ConduitT RebuildTask RunExistingResult (Ribo (TVar Env)) ()
 handleExistingC = mapMC handleExisting
 
-handleNonexistingC :: ConduitT RunExistingResult RunInstalledResult (Ribo (TVar Env)) ()
+handleNonexistingC :: ConduitT RunExistingResult RunBuiltResult (Ribo (TVar Env)) ()
 handleNonexistingC = mapMC handleNonexisting
 
-rebuilder :: TBMChan RebuildControl -> ConduitT () Void (Ribo (TVar Env)) [RunInstalledResult]
+rebuilder :: TBMChan RebuildControl -> ConduitT () Void (Ribo (TVar Env)) [RunBuiltResult]
 rebuilder chan = sourceTBMChan chan
   .| controlC
   .| handleExistingC
