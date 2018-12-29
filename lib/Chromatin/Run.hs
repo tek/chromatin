@@ -6,14 +6,16 @@ module Chromatin.Run(
 import Data.List.Split (linesBy)
 import Data.MessagePack (Object)
 import UnliftIO.Exception (catch)
+import System.FilePath ((</>))
 import Neovim (NeovimException, toObject, fromObject', vim_call_function')
 import qualified Neovim as NeovimException (NeovimException(ErrorMessage, ErrorResult))
 import qualified Data.Map as Map (fromList)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.ActiveRplugin (ActiveRplugin(ActiveRplugin))
-import Chromatin.Data.RpluginSource (RpluginSource(Stack))
+import Chromatin.Data.RpluginSource (RpluginSource(Stack, Pypi))
 import Chromatin.Data.Chromatin (Chromatin)
+import Chromatin.Install (venvDir)
 
 data RunResult =
   Success ActiveRplugin
@@ -39,8 +41,18 @@ runRpluginStack (RpluginName name) path = do
   let opts = Map.fromList [("cwd", toObject path), ("rpc", toObject True)]
   jobstart [toObject $ "stack exec " ++ name, toObject opts]
 
+runRpluginPypi :: RpluginName -> Chromatin (Either String Int)
+runRpluginPypi name@(RpluginName nameS) = do
+  dir <- venvDir name
+  let exe = dir </> "bin" </> "python"
+  let start = dir </> "bin" </> "ribosome_start_plugin"
+  let plug = dir </> "lib" </> "python3.7" </> "site-packages" </> nameS
+  let opts = Map.fromList [("rpc", toObject True)]
+  jobstart [toObject [toObject exe, toObject start, toObject plug], toObject opts]
+
 runRplugin' :: RpluginName -> RpluginSource -> Chromatin (Either String Int)
 runRplugin' name (Stack path) = runRpluginStack name path
+runRplugin' name (Pypi _) = runRpluginPypi name
 runRplugin' _ _ = return (Left "NI")
 
 runRplugin :: Rplugin -> Chromatin RunResult

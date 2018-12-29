@@ -7,12 +7,15 @@ import Control.Concurrent.STM.TBMChan (TBMChan, newTBMChan, writeTBMChan, closeT
 import qualified Control.Lens as Lens (set)
 import Data.Conduit.TMChan (sourceTBMChan)
 import Data.Foldable (traverse_)
+import Data.Functor (void)
 import UnliftIO (atomically)
 import UnliftIO.STM (TVar, STM)
 import Neovim (CommandArguments)
 import Ribosome.Control.Ribo (Ribo)
 import qualified Ribosome.Control.Ribo as Ribo (inspect, modify)
+import Ribosome.Data.ScratchOptions (defaultScratchOptions)
 import Ribosome.Internal.IO (forkNeovim)
+import Ribosome.Scratch (showInScratch)
 import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Env (Env, InstallTask(..))
 import qualified Chromatin.Data.Env as Env (installerChan, _installerChan)
@@ -54,10 +57,17 @@ runnerC = mapMC runInstallResult
 createChan :: STM (TBMChan InstallTask)
 createChan = newTBMChan 64
 
+extractFailure :: RunResult -> [String]
+extractFailure (RunResult.Failure err) = err
+extractFailure (RunResult.Success _) = []
+
 runInstaller :: TBMChan InstallTask -> Chromatin ()
 runInstaller chan = do
-  r <- runConduit $ sourceTBMChan chan .| installerC .| runnerC .| sinkList
-  Log.debug $ "installer terminated: " ++ show r
+  result <- runConduit $ sourceTBMChan chan .| installerC .| runnerC .| sinkList
+  case concatMap extractFailure result of
+    err@(_:_) -> void $ showInScratch err (defaultScratchOptions "chromatin-install-error")
+    _ -> return ()
+  Log.debug $ "installer terminated: " ++ show result
 
 forkInstaller :: Chromatin (TBMChan InstallTask)
 forkInstaller = do

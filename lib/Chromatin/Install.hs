@@ -1,6 +1,7 @@
 module Chromatin.Install(
   installRplugin,
   InstallResult(..),
+  venvDir,
 ) where
 
 import Control.Monad.IO.Class (MonadIO)
@@ -11,12 +12,17 @@ import qualified Data.ByteString.Lazy.Internal as B (unpackChars)
 import System.FilePath ((</>))
 import System.Process.Typed (ProcessConfig, setStdout, useHandleClose, readProcessStderr, proc, setWorkingDir)
 import UnliftIO.Temporary (withSystemTempFile)
-import UnliftIO.Directory (getXdgDirectory, XdgDirectory(XdgData), createDirectoryIfMissing)
+import UnliftIO.Directory (
+  getXdgDirectory,
+  XdgDirectory(XdgData, XdgCache),
+  createDirectoryIfMissing,
+  removePathForcibly,
+  )
 import Neovim (Buffer, vim_command', vim_get_current_buffer', vim_command, buffer_get_number')
 import Ribosome.Api.Echo (echom)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(..))
-import Chromatin.Data.RpluginSource (RpluginSource(Hackage, Stack), HackageDepspec(..))
+import Chromatin.Data.RpluginSource (RpluginSource(Hackage, Stack, Pypi), HackageDepspec(..), PypiDepspec(..))
 import Chromatin.Data.Chromatin (Chromatin)
 
 data InstallResult =
@@ -72,6 +78,28 @@ installStackProcess :: RpluginName -> FilePath -> Chromatin (Either String ())
 installStackProcess name path =
   processWithLog name $ stackProcess path
 
+venvProcess :: FilePath -> ProcessConfig () () ()
+venvProcess dir =
+  proc "python3" ["-m", "venv", dir, "--upgrade"]
+
+venvDir :: RpluginName -> Chromatin FilePath
+venvDir (RpluginName name) = getXdgDirectory XdgCache ("chromatin-hs" </> "venvs" </> name)
+
+createVenvProcess :: RpluginName -> Chromatin (Either String FilePath)
+createVenvProcess name = do
+  dir <- venvDir name
+  removePathForcibly dir
+  r <- processWithLog name (venvProcess dir)
+  return $ dir <$ r
+
+pipProcess :: PypiDepspec -> FilePath -> ProcessConfig () () ()
+pipProcess (PypiDepspec spec) venv =
+  proc (venv </> "bin" </> "pip") ["install", "--no-cache", "--upgrade", spec]
+
+installPypiProcess :: RpluginName -> PypiDepspec -> FilePath -> Chromatin (Either String ())
+installPypiProcess name spec venv =
+  processWithLog name (pipProcess spec venv)
+
 binaryDir :: Chromatin FilePath
 binaryDir = getXdgDirectory XdgData ("chromatin" </> "bin")
 
@@ -80,9 +108,13 @@ installRpluginFromSource name (Hackage spec) = do
   bindir <- binaryDir
   createDirectoryIfMissing True bindir
   installHackageProcess name bindir spec
-installRpluginFromSource name (Stack path) = do
+installRpluginFromSource name (Stack path) =
   installStackProcess name path
-installRpluginFromSource _ _ = return (Left "NI")
+installRpluginFromSource name (Pypi spec) = do
+  dir <- createVenvProcess name
+  case dir of
+    Right d -> installPypiProcess name spec d
+    Left e -> return $ Left e
 
 installRplugin :: RpluginName -> RpluginSource -> Chromatin InstallResult
 installRplugin name source = do

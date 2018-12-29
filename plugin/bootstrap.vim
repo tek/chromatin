@@ -38,11 +38,18 @@ function! s:job(cmd, output, next, error) abort "{{{
   silent! wincmd w
 endfunction "}}}
 
+function! ChromatinJobStderr(id, data, event) abort "{{{
+  call filter(a:data, 'len(v:val) > 0')
+  if len(a:data) > 0
+    echom 'error in chromatin rpc job on channel ' . a:id . ': ' . string(a:data) . ' / ' . string(a:event)
+  endif
+endfunction "}}}
+
 function! s:run_chromatin(stack, ...) abort "{{{
   if !a:0
     echom 'chromatin: running chromatin…'
   endif
-  return jobstart(a:stack . ' exec chromatin', { 'rpc': v:true, 'cwd': s:plugin_base })
+  return jobstart(a:stack . ' exec chromatin', { 'rpc': v:true, 'on_stderr': 'ChromatinJobStderr', 'cwd': s:plugin_base })
 endfunction "}}}
 
 function! s:install_chromatin(stack) abort "{{{

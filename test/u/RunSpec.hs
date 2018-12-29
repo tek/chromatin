@@ -18,8 +18,8 @@ import Chromatin.Run (runRplugin)
 import qualified Chromatin.Run as RunResult (RunResult(Success))
 import Config (vars)
 
-installSpec :: Chromatin ()
-installSpec = do
+runSpec :: Chromatin ()
+runSpec = do
   cwd <- getCurrentDirectory
   let rplugin = Rplugin (RpluginName "chromatin") (Stack cwd)
   result <- runRplugin rplugin
@@ -30,4 +30,4 @@ installSpec = do
 
 test_run :: IO ()
 test_run =
-  vars >>= specWithDef installSpec
+  vars >>= specWithDef runSpec
