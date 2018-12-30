@@ -16,7 +16,7 @@ extra-source-files:
 
 dependencies:
 - base >= 4.7 && < 5
-- ribosome
+- ribosome >= 0.1.2
 - nvim-hs
 - unliftio
 - data-default-class
@@ -39,6 +39,7 @@ dependencies:
 - messagepack
 - transformers
 - Glob
+- strings
 
 library:
  source-dirs: lib

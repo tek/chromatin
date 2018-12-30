@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 560b0a26d65a7e63d7c566631d1a3e83822116adb9958225a42bbb595604065f
+-- hash: b296b801b4fcb423b6e18ac35685ae1c4d8467919874df5400ca8268fac3ddcc
 
 name:           chromatin
 version:        0.1.0.0
@@ -44,12 +44,14 @@ library
       Chromatin.Data.RunBuiltResult
       Chromatin.Data.RunExistingResult
       Chromatin.Diag
+      Chromatin.Env
       Chromatin.Init
       Chromatin.Log
       Chromatin.Plugin
       Chromatin.Rebuild
       Chromatin.Rebuild.Build
       Chromatin.Rebuild.Existing
+      Chromatin.Rebuild.Init
       Chromatin.Rebuild.Nonexisting
       Chromatin.Run
       Chromatin.Settings
@@ -77,10 +79,11 @@ library
     , parsec
     , prettyprinter
     , resourcet
-    , ribosome
+    , ribosome >=0.1.2
     , split
     , stm-chans
     , stm-conduit
+    , strings
     , transformers
     , typed-process
     , unliftio
@@ -111,10 +114,11 @@ executable chromatin
     , parsec
     , prettyprinter
     , resourcet
-    , ribosome
+    , ribosome >=0.1.2
     , split
     , stm-chans
     , stm-conduit
+    , strings
     , transformers
     , typed-process
     , unliftio
@@ -147,10 +151,11 @@ test-suite chromatin-functional
     , parsec
     , prettyprinter
     , resourcet
-    , ribosome
+    , ribosome >=0.1.2
     , split
     , stm-chans
     , stm-conduit
+    , strings
     , transformers
     , typed-process
     , unliftio
@@ -189,10 +194,11 @@ test-suite chromatin-unit
     , parsec
     , prettyprinter
     , resourcet
-    , ribosome
+    , ribosome >=0.1.2
     , split
     , stm-chans
     , stm-conduit
+    , strings
     , transformers
     , typed-process
     , unliftio

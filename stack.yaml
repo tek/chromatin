@@ -5,4 +5,4 @@ packages:
 extra-deps:
   - strings-1.1
   - pretty-terminal-0.1.0.0
-  - ribosome-0.1.0.0
+  - ribosome-0.1.2.0

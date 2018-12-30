@@ -18,6 +18,7 @@ import qualified Ribosome.Control.Ribo as Ribo (inspect, modify)
 import Ribosome.Data.ScratchOptions (defaultScratchOptions)
 import Ribosome.Internal.IO (forkNeovim)
 import Ribosome.Scratch (showInScratch)
+import Chromatin.Data.ActiveRplugin (ActiveRplugin)
 import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Env (Env)
 import qualified Chromatin.Data.Env as Env (installerChan, _installerChan)
@@ -31,6 +32,7 @@ import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.RpluginSource (RpluginSource)
 import Chromatin.Config (readConfig, analyzeConfigIO, RpluginModification(RpluginNew))
 import Chromatin.Rebuild.Existing (handleExisting)
+import Chromatin.Rebuild.Init (initializeRplugins)
 import Chromatin.Rebuild.Nonexisting (handleNonexisting)
 import qualified Chromatin.Log as Log
 
@@ -55,6 +57,10 @@ extractFailure (RunBuiltResult.Failure (RebuildTask (RpluginName name) _) err) =
 extractFailure (RunBuiltResult.Success _) = []
 extractFailure (RunBuiltResult.PreviousFailure stage (RebuildTask (RpluginName name) _) err) =
   ("error in stage `" ++ stage ++ "` for plugin `" ++ name ++ "`:") : err
+
+extractSuccess :: RunBuiltResult -> [ActiveRplugin]
+extractSuccess (RunBuiltResult.Success arp) = [arp]
+extractSuccess _ = []
 
 controlC :: ConduitT RebuildControl RebuildTask (Ribo (TVar Env)) ()
 controlC = do
@@ -83,6 +89,7 @@ runRebuilder chan = do
   case concatMap extractFailure result of
     err@(_:_) -> void $ showInScratch err (defaultScratchOptions "chromatin-rebuild-error")
     _ -> return ()
+  initializeRplugins (concatMap extractSuccess result)
   Log.debug $ "installer terminated: " ++ show result
 
 forkRebuilder :: Chromatin (TBMChan RebuildControl)
