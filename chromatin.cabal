@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b296b801b4fcb423b6e18ac35685ae1c4d8467919874df5400ca8268fac3ddcc
+-- hash: a5e8b4dcc258cfd22703e2dec094e1a68592dffd9517b92197800e8551b6c940
 
 name:           chromatin
-version:        0.1.0.0
+version:        0.1.1.0
 synopsis:       neovim package manager
 description:    Please see the README on GitHub at <https://github.com/tek/chromatin-hs>
 category:       Neovim
