@@ -8,6 +8,7 @@ let s:scripts = s:plugin_base . '/scripts'
 let s:install_stack_cmd = s:scripts . '/install-stack'
 let s:default_stack = $HOME . '/.local/bin/stack'
 let s:termbuf = -1
+let s:nvim_hs = get(g:, 'nvim_hs_vim', 0)
 
 function! s:close_terminal() abort "{{{
   execute 'silent! ' . s:termbuf . 'bwipeout!'
@@ -111,6 +112,8 @@ function! s:bootstrap() abort "{{{
   endif
 endfunction "}}}
 
-if get(g:, 'chromatin_autobootstrap', 1)
+if s:nvim_hs
+  call nvimhs#start(expand('<sfile>:p:h:h'), 'chromatin', [])
+elseif get(g:, 'chromatin_autobootstrap', 1)
   call s:bootstrap()
 endif
