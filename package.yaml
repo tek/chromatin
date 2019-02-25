@@ -18,6 +18,7 @@ dependencies:
 - base >= 4.7 && < 5
 - ribosome >= 0.1.2
 - nvim-hs
+- unliftio-core
 - unliftio
 - data-default-class
 - lens
@@ -39,7 +40,48 @@ dependencies:
 - messagepack
 - transformers
 - Glob
-- strings
+
+default-extensions:
+- AutoDeriveTypeable
+- BangPatterns
+- BinaryLiterals
+- ConstraintKinds
+- DataKinds
+- DefaultSignatures
+- DeriveDataTypeable
+- DeriveFoldable
+- DeriveFunctor
+- DeriveGeneric
+- DeriveTraversable
+- DoAndIfThenElse
+- EmptyDataDecls
+- ExistentialQuantification
+- FlexibleContexts
+- FlexibleInstances
+- FunctionalDependencies
+- GADTs
+- GeneralizedNewtypeDeriving
+- InstanceSigs
+- KindSignatures
+- LambdaCase
+- MonadFailDesugaring
+- MultiParamTypeClasses
+- MultiWayIf
+- NamedFieldPuns
+- OverloadedStrings
+- PartialTypeSignatures
+- PatternGuards
+- PolyKinds
+- RankNTypes
+- RecordWildCards
+- ScopedTypeVariables
+- StandaloneDeriving
+- TupleSections
+- TypeApplications
+- TypeFamilies
+- TypeSynonymInstances
+- UnicodeSyntax
+- ViewPatterns
 
 library:
  source-dirs: lib
@@ -59,16 +101,6 @@ tests:
   chromatin-unit:
     main: SpecMain.hs
     source-dirs: test/u
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - chromatin
-    - HTF
-  chromatin-functional:
-    main: SpecMain.hs
-    source-dirs: test/f
     ghc-options:
     - -threaded
     - -rtsopts

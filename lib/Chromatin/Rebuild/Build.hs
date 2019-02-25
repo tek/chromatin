@@ -5,25 +5,28 @@ module Chromatin.Rebuild.Build(
 ) where
 
 import Control.Monad.IO.Class (MonadIO)
+import qualified Data.ByteString.Lazy.Internal as B (unpackChars)
+import Data.Foldable (traverse_)
 import Data.List.Split (linesBy)
 import GHC.IO.Exception (ExitCode(ExitFailure))
 import GHC.IO.Handle.Types (Handle)
-import qualified Data.ByteString.Lazy.Internal as B (unpackChars)
+import Neovim (Buffer, vim_command', vim_get_current_buffer', vim_command, buffer_get_number')
+import Ribosome.Api.Echo (echom)
 import System.FilePath ((</>))
 import System.Process.Typed (ProcessConfig, setStdout, useHandleClose, readProcessStderr, proc, setWorkingDir)
-import UnliftIO.Temporary (withSystemTempFile)
 import UnliftIO.Directory (
   getXdgDirectory,
   XdgDirectory(XdgData, XdgCache),
   createDirectoryIfMissing,
   removePathForcibly,
   )
-import Neovim (Buffer, vim_command', vim_get_current_buffer', vim_command, buffer_get_number')
-import Ribosome.Api.Echo (echom)
+import UnliftIO.Temporary (withSystemTempFile)
+
+import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(..))
 import Chromatin.Data.RpluginSource (RpluginSource(Hackage, Stack, Pypi), HackageDepspec(..), PypiDepspec(..))
-import Chromatin.Data.Chromatin (Chromatin)
+import Chromatin.Git (gitRefFromRepo, storeProjectRef)
 
 data InstallResult =
   Success Rplugin
@@ -103,22 +106,32 @@ installPypiProcess name spec venv =
 binaryDir :: Chromatin FilePath
 binaryDir = getXdgDirectory XdgData ("chromatin" </> "bin")
 
-installRpluginFromSource :: RpluginName -> RpluginSource -> Chromatin (Either String ())
+installRpluginFromSource :: RpluginName -> RpluginSource -> Chromatin (Either String (Maybe FilePath))
 installRpluginFromSource name (Hackage spec) = do
   bindir <- binaryDir
   createDirectoryIfMissing True bindir
-  installHackageProcess name bindir spec
-installRpluginFromSource name (Stack path) =
-  installStackProcess name path
+  result <- installHackageProcess name bindir spec
+  return $ Nothing <$ result
+installRpluginFromSource name (Stack path) = do
+  result <- installStackProcess name path
+  return $ Just path <$ result
 installRpluginFromSource name (Pypi spec) = do
   dir <- createVenvProcess name
-  case dir of
+  result <- case dir of
     Right d -> installPypiProcess name spec d
     Left e -> return $ Left e
+  return $ Nothing <$ result
+
+updateProjectRef :: RpluginName -> FilePath -> Chromatin ()
+updateProjectRef name path = do
+  ref <- gitRefFromRepo path
+  traverse_ (storeProjectRef name) ref
 
 installRplugin :: RpluginName -> RpluginSource -> Chromatin InstallResult
 installRplugin name source = do
   result <- installRpluginFromSource name source
-  return $ case result of
-    Right _ -> Success $ Rplugin name source
-    Left err -> Failure $ linesBy (=='\n') err
+  case result of
+    Right path -> do
+      traverse_ (updateProjectRef name) path
+      return $ Success $ Rplugin name source
+    Left err -> return $ Failure $ linesBy (=='\n') err

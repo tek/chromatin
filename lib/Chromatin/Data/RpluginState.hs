@@ -8,4 +8,4 @@ data RpluginState =
   Ready
   |
   Incomplete
-  deriving Show
+  deriving (Eq, Show)

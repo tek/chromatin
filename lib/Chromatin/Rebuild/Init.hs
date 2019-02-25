@@ -7,23 +7,23 @@ import Data.Default.Class (def)
 import Data.Foldable (traverse_)
 import Data.Functor (void)
 import Data.Maybe (catMaybes)
-import Data.Strings (strCapitalize)
 import Neovim (NeovimException, vim_call_function)
 import Ribosome.Api.Exists (waitForFunction)
 import qualified Ribosome.Api.Exists as Exists (function)
+import Ribosome.Error.Report (reportError)
+
 import Chromatin.Data.ActiveRplugin (ActiveRplugin(ActiveRplugin))
 import Chromatin.Data.Chromatin (Chromatin)
-import Ribosome.Data.Errors (ComponentName(ComponentName))
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
-import Chromatin.Env (logError)
+import Chromatin.Data.String (capitalize)
 
 activeRpluginName :: ActiveRplugin -> String
 activeRpluginName (ActiveRplugin _ (Rplugin (RpluginName rpluginName) _)) = rpluginName
 
 pluginRpcName :: String -> ActiveRplugin -> String
 pluginRpcName rpcName rplugin =
-  strCapitalize (activeRpluginName rplugin) ++ rpcName
+  capitalize (activeRpluginName rplugin) ++ rpcName
 
 waitForPlugin :: ActiveRplugin -> Chromatin (Maybe ActiveRplugin)
 waitForPlugin rplugin = do
@@ -34,7 +34,7 @@ waitForPlugin rplugin = do
 
 stageError :: ActiveRplugin -> Int -> NeovimException -> Chromatin ()
 stageError rplugin stage err =
-  logError (ComponentName "rebuild-init") $ "error in stage " ++ show stage ++ " of `" ++ name ++ "`" ++ show err
+  reportError "rebuild-init" $ "error in stage " ++ show stage ++ " of `" ++ name ++ "`" ++ show err
   where
     name = activeRpluginName rplugin
 

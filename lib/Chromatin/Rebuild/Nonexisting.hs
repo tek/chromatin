@@ -3,12 +3,12 @@ module Chromatin.Rebuild.Nonexisting(
 ) where
 
 import Chromatin.Data.Chromatin (Chromatin)
+import Chromatin.Data.RebuildTask (RebuildTask(..))
 import Chromatin.Data.Rplugin (Rplugin)
-import Chromatin.Data.RunExistingResult (RunExistingResult)
-import qualified Chromatin.Data.RunExistingResult as RunExistingResult (RunExistingResult(..))
 import Chromatin.Data.RunBuiltResult (RunBuiltResult)
 import qualified Chromatin.Data.RunBuiltResult as RunBuiltResult (RunBuiltResult(..))
-import Chromatin.Data.RebuildTask (RebuildTask(..))
+import Chromatin.Data.RunExistingResult (RunExistingResult)
+import qualified Chromatin.Data.RunExistingResult as RunExistingResult (RunExistingResult(..))
 import Chromatin.Rebuild.Build (InstallResult, installRplugin)
 import qualified Chromatin.Rebuild.Build as InstallResult (InstallResult(Success, Failure))
 import Chromatin.Run (runRplugin, RunRpluginResult)
@@ -30,6 +30,6 @@ handleNonexisting :: RunExistingResult -> Chromatin RunBuiltResult
 handleNonexisting (RunExistingResult.Success active) = return $ RunBuiltResult.Success active
 handleNonexisting (RunExistingResult.Failure task err) =
   return $ RunBuiltResult.PreviousFailure "run-existing" task err
-handleNonexisting (RunExistingResult.NotReady task@(RebuildTask name source)) = do
+handleNonexisting (RunExistingResult.NotReady task@(RebuildTask name source _)) = do
   result <- installRplugin name source
   installResult task result

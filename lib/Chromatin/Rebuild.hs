@@ -10,31 +10,32 @@ import Data.Conduit.TMChan (sourceTBMChan)
 import Data.Foldable (traverse_)
 import Data.Functor (void)
 import Data.Void (Void)
-import UnliftIO (atomically)
-import UnliftIO.STM (TVar, STM)
 import Neovim (CommandArguments)
 import Ribosome.Control.Ribo (Ribo)
 import qualified Ribosome.Control.Ribo as Ribo (inspect, modify)
 import Ribosome.Data.ScratchOptions (defaultScratchOptions)
 import Ribosome.Internal.IO (forkNeovim)
 import Ribosome.Scratch (showInScratch)
+import UnliftIO (atomically)
+import UnliftIO.STM (TVar, STM)
+
+import Chromatin.Config (readConfig, analyzeConfigIO, RpluginModification(RpluginNew))
 import Chromatin.Data.ActiveRplugin (ActiveRplugin)
 import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Env (Env)
 import qualified Chromatin.Data.Env as Env (installerChan, _installerChan)
-import Chromatin.Data.RebuildTask (RebuildTask(..))
 import Chromatin.Data.RebuildControl (RebuildControl)
 import qualified Chromatin.Data.RebuildControl as RebuildControl (RebuildControl(..))
-import Chromatin.Data.RunExistingResult (RunExistingResult)
-import Chromatin.Data.RunBuiltResult (RunBuiltResult)
-import qualified Chromatin.Data.RunBuiltResult as RunBuiltResult (RunBuiltResult(..))
+import Chromatin.Data.RebuildTask (RebuildTask(..))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.RpluginSource (RpluginSource)
-import Chromatin.Config (readConfig, analyzeConfigIO, RpluginModification(RpluginNew))
+import Chromatin.Data.RunBuiltResult (RunBuiltResult)
+import qualified Chromatin.Data.RunBuiltResult as RunBuiltResult (RunBuiltResult(..))
+import Chromatin.Data.RunExistingResult (RunExistingResult)
+import qualified Chromatin.Log as Log
 import Chromatin.Rebuild.Existing (handleExisting)
 import Chromatin.Rebuild.Init (initializeRplugins)
 import Chromatin.Rebuild.Nonexisting (handleNonexisting)
-import qualified Chromatin.Log as Log
 
 mapMChan :: Chromatin a -> (TBMChan RebuildControl -> Chromatin a) -> Chromatin a
 mapMChan fEmpty f = do
@@ -52,10 +53,10 @@ createChan :: STM (TBMChan RebuildControl)
 createChan = newTBMChan 64
 
 extractFailure :: RunBuiltResult -> [String]
-extractFailure (RunBuiltResult.Failure (RebuildTask (RpluginName name) _) err) =
+extractFailure (RunBuiltResult.Failure (RebuildTask (RpluginName name) _ _) err) =
   ("error when runnning plugin `" ++ name ++ "`:") : err
 extractFailure (RunBuiltResult.Success _) = []
-extractFailure (RunBuiltResult.PreviousFailure stage (RebuildTask (RpluginName name) _) err) =
+extractFailure (RunBuiltResult.PreviousFailure stage (RebuildTask (RpluginName name) _ _) err) =
   ("error in stage `" ++ stage ++ "` for plugin `" ++ name ++ "`:") : err
 
 extractSuccess :: RunBuiltResult -> [ActiveRplugin]
@@ -102,13 +103,13 @@ forkRebuilder = do
 enqueue :: RebuildControl -> TBMChan RebuildControl -> Chromatin ()
 enqueue ctrl chan = atomically $ writeTBMChan chan ctrl
 
-executeRpluginNew :: RpluginName -> RpluginSource -> Chromatin ()
-executeRpluginNew name source = do
+executeRpluginNew :: RpluginName -> RpluginSource -> Bool -> Chromatin ()
+executeRpluginNew name source dev = do
   chan <- mapMChan forkRebuilder return
-  enqueue (RebuildControl.Continue (RebuildTask name source)) chan
+  enqueue (RebuildControl.Continue (RebuildTask name source dev)) chan
 
 executeModification :: RpluginModification -> Chromatin ()
-executeModification (RpluginNew name source) = executeRpluginNew name source
+executeModification (RpluginNew name source dev) = executeRpluginNew name source dev
 executeModification _ = return ()
 
 executeModifications :: [RpluginModification] -> Chromatin ()

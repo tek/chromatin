@@ -5,30 +5,30 @@ module Chromatin.Config(
   analyzeConfigIO,
 ) where
 
-import Data.Maybe (fromMaybe)
-import Data.Foldable (find)
-import Text.ParserCombinators.Parsec
-import System.FilePath (takeFileName)
-import qualified Ribosome.Control.Ribo as Ribo (inspect)
-import Ribosome.Config.Setting (setting)
 import Chromatin.Data.Chromatin (Chromatin)
 import qualified Chromatin.Data.Env as Env (rplugins)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
+import Chromatin.Data.RpluginConfig (RpluginConfig(RpluginConfig))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.RpluginSource (RpluginSource(..), HackageDepspec(HackageDepspec), PypiDepspec(PypiDepspec))
 import Chromatin.Data.Rplugins (Rplugins(Rplugins))
-import Chromatin.Data.RpluginConfig (RpluginConfig(RpluginConfig))
 import qualified Chromatin.Settings as S (rplugins)
+import Data.Foldable (find)
+import Data.Maybe (fromMaybe)
+import Ribosome.Config.Setting (setting)
+import qualified Ribosome.Control.Ribo as Ribo (inspect)
+import System.FilePath (takeFileName)
+import Text.ParserCombinators.Parsec
 
 readConfig :: Chromatin Rplugins
 readConfig = setting S.rplugins
 
 data RpluginModification =
-  RpluginNew RpluginName RpluginSource
+  RpluginNew RpluginName RpluginSource Bool
   |
   RpluginRemove Rplugin
   |
-  RpluginUpdate Rplugin RpluginSource
+  RpluginUpdate Rplugin RpluginSource Bool
   |
   RpluginKeep Rplugin
   deriving (Eq, Show)
@@ -75,11 +75,11 @@ modifyExisting :: RpluginSource -> Rplugin -> RpluginModification
 modifyExisting _ _ = undefined
 
 modification :: [Rplugin] -> RpluginConfig -> Either String RpluginModification
-modification current (RpluginConfig spec explicitName) = do
+modification current (RpluginConfig spec explicitName dev) = do
   source <- sourceFromSpec spec
   let name = fromMaybe (nameFromSource source) explicitName
   let sameName = find (rpluginHasName name) current
-  return $ maybe (RpluginNew name source) (modifyExisting source) sameName
+  return $ maybe (RpluginNew name source (fromMaybe False dev)) (modifyExisting source) sameName
 
 removals :: [RpluginModification] -> [RpluginModification]
 removals _ = []

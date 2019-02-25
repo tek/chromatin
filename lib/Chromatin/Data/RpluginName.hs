@@ -1,12 +1,9 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveAnyClass #-}
-
 module Chromatin.Data.RpluginName(
   RpluginName(..),
 ) where
 
-import GHC.Generics (Generic)
 import Control.DeepSeq (NFData)
+import GHC.Generics (Generic)
 import Neovim.Classes (NvimObject(..))
 import Ribosome.Internal.NvimObject (deriveString)
 

@@ -1,15 +1,12 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveAnyClass #-}
-
 module Chromatin.Data.Rplugins(
   Rplugins(..),
 ) where
 
-import GHC.Generics (Generic)
-import Data.Default.Class (Default)
-import Control.DeepSeq (NFData)
-import Neovim.Classes (NvimObject(..))
 import Chromatin.Data.RpluginConfig (RpluginConfig)
+import Control.DeepSeq (NFData)
+import Data.Default.Class (Default)
+import GHC.Generics (Generic)
+import Neovim.Classes (NvimObject(..))
 
 newtype Rplugins =
   Rplugins [RpluginConfig]

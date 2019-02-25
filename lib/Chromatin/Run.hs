@@ -5,19 +5,21 @@ module Chromatin.Run(
 ) where
 
 import Control.Monad.IO.Class (liftIO)
+import Data.ByteString (ByteString)
 import Data.List.Split (linesBy)
+import qualified Data.Map as Map (fromList)
 import Data.MessagePack (Object)
-import UnliftIO.Exception (catch)
-import System.FilePath ((</>))
-import qualified System.FilePath.Glob as Glob (globDir1, compile)
 import Neovim (NeovimException, toObject, fromObject', vim_call_function')
 import qualified Neovim as NeovimException (NeovimException(ErrorMessage, ErrorResult))
-import qualified Data.Map as Map (fromList)
+import System.FilePath ((</>))
+import qualified System.FilePath.Glob as Glob (globDir1, compile)
+import UnliftIO.Exception (catch)
+
+import Chromatin.Data.ActiveRplugin (ActiveRplugin(ActiveRplugin))
+import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
-import Chromatin.Data.ActiveRplugin (ActiveRplugin(ActiveRplugin))
 import Chromatin.Data.RpluginSource (RpluginSource(Stack, Pypi))
-import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Rebuild.Build (venvDir)
 
 data RunRpluginResult =
@@ -41,7 +43,7 @@ jobstart args =
 
 runRpluginStack :: RpluginName -> FilePath -> Chromatin (Either String Int)
 runRpluginStack (RpluginName name) path = do
-  let opts = Map.fromList [("cwd", toObject path), ("rpc", toObject True)]
+  let opts = Map.fromList [("cwd" :: ByteString, toObject path), ("rpc", toObject True)]
   jobstart [toObject $ "stack exec " ++ name, toObject opts]
 
 pypiPluginExecutable :: RpluginName -> Chromatin FilePath
@@ -66,7 +68,7 @@ runRpluginPypi :: RpluginName -> Chromatin (Either String Int)
 runRpluginPypi rpluginName@(RpluginName name) = do
   dir <- venvDir rpluginName
   let exe = dir </> "bin" </> "python"
-  let opts = Map.fromList [("rpc", toObject True)]
+  let opts = Map.fromList [("rpc" :: ByteString, toObject True)]
   start <- pypiPluginExecutable rpluginName
   mayPackage <- pypiPluginPackage rpluginName
   case mayPackage of

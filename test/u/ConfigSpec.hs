@@ -5,22 +5,23 @@ module ConfigSpec(
 ) where
 
 import Test.Framework
-import Chromatin.Data.Rplugins (Rplugins(Rplugins))
-import Chromatin.Data.RpluginName (RpluginName(RpluginName))
-import Chromatin.Data.RpluginConfig (RpluginConfig(RpluginConfig))
-import Chromatin.Data.RpluginSource (RpluginSource(Hackage), HackageDepspec(HackageDepspec))
+
 import Chromatin.Config (analyzeConfig, RpluginModification(RpluginNew))
+import Chromatin.Data.RpluginConfig (RpluginConfig(RpluginConfig))
+import Chromatin.Data.RpluginName (RpluginName(RpluginName))
+import Chromatin.Data.RpluginSource (RpluginSource(Hackage), HackageDepspec(HackageDepspec))
+import Chromatin.Data.Rplugins (Rplugins(Rplugins))
 
 rplugins :: Rplugins
 rplugins = Rplugins [
-  RpluginConfig "hackage:proteome-0.1.0.0" (Just (RpluginName "proteome")),
-  RpluginConfig "hackage:flagellum" Nothing
+  RpluginConfig "hackage:proteome-0.1.0.0" (Just (RpluginName "proteome")) Nothing,
+  RpluginConfig "hackage:flagellum" Nothing Nothing
   ]
 
 target :: Either String [RpluginModification]
 target = Right [
-  RpluginNew (RpluginName "proteome") (Hackage (HackageDepspec "proteome-0.1.0.0")),
-  RpluginNew (RpluginName "flagellum") (Hackage (HackageDepspec "flagellum"))
+  RpluginNew (RpluginName "proteome") (Hackage (HackageDepspec "proteome-0.1.0.0")) False,
+  RpluginNew (RpluginName "flagellum") (Hackage (HackageDepspec "flagellum")) False
   ]
 
 test_analyzeConfig :: IO ()

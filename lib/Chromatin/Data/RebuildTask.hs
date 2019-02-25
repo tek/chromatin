@@ -6,5 +6,9 @@ import Chromatin.Data.RpluginName (RpluginName)
 import Chromatin.Data.RpluginSource (RpluginSource)
 
 data RebuildTask =
-  RebuildTask RpluginName RpluginSource
+  RebuildTask {
+    name :: RpluginName,
+    source :: RpluginSource,
+    dev :: Bool
+  }
   deriving Show
