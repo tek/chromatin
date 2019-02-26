@@ -11,28 +11,31 @@ import Data.Foldable (traverse_)
 import Data.Functor (void)
 import Data.Void (Void)
 import Neovim (CommandArguments)
+import Ribosome.Control.Monad.RiboE (riboE, mapE, runRiboReport, liftRibo)
 import Ribosome.Control.Ribo (Ribo)
 import qualified Ribosome.Control.Ribo as Ribo (inspect, modify)
 import Ribosome.Data.ScratchOptions (defaultScratchOptions)
 import Ribosome.Internal.IO (forkNeovim)
+import qualified Ribosome.Log as Log (debugR)
 import Ribosome.Scratch (showInScratch)
 import UnliftIO (atomically)
 import UnliftIO.STM (TVar, STM)
 
 import Chromatin.Config (readConfig, analyzeConfigIO, RpluginModification(RpluginNew))
 import Chromatin.Data.ActiveRplugin (ActiveRplugin)
-import Chromatin.Data.Chromatin (Chromatin)
+import Chromatin.Data.Chromatin (Chromatin, ChromatinE)
 import Chromatin.Data.Env (Env)
 import qualified Chromatin.Data.Env as Env (installerChan, _installerChan)
 import Chromatin.Data.RebuildControl (RebuildControl)
 import qualified Chromatin.Data.RebuildControl as RebuildControl (RebuildControl(..))
+import Chromatin.Data.RebuildError (RebuildError)
+import qualified Chromatin.Data.RebuildError as RebuildError (RebuildError(Setting, Analysis))
 import Chromatin.Data.RebuildTask (RebuildTask(..))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.RpluginSource (RpluginSource)
 import Chromatin.Data.RunBuiltResult (RunBuiltResult)
 import qualified Chromatin.Data.RunBuiltResult as RunBuiltResult (RunBuiltResult(..))
 import Chromatin.Data.RunExistingResult (RunExistingResult)
-import qualified Chromatin.Log as Log
 import Chromatin.Rebuild.Existing (handleExisting)
 import Chromatin.Rebuild.Init (initializeRplugins)
 import Chromatin.Rebuild.Nonexisting (handleNonexisting)
@@ -47,7 +50,7 @@ stopRebuilder =
   mapMChan (return ()) $ \c -> do
     Ribo.modify $ Lens.set Env._installerChan Nothing
     atomically $ closeTBMChan c
-    Log.debug "stopped installer conduit"
+    Log.debugR "stopped installer conduit"
 
 createChan :: STM (TBMChan RebuildControl)
 createChan = newTBMChan 64
@@ -91,7 +94,7 @@ runRebuilder chan = do
     err@(_:_) -> void $ showInScratch err (defaultScratchOptions "chromatin-rebuild-error")
     _ -> return ()
   initializeRplugins (concatMap extractSuccess result)
-  Log.debug $ "installer terminated: " ++ show result
+  Log.debugR $ "installer terminated: " ++ show result
 
 forkRebuilder :: Chromatin (TBMChan RebuildControl)
 forkRebuilder = do
@@ -117,13 +120,12 @@ executeModifications mods = do
   traverse_ executeModification mods
   mapMChan (return ()) (enqueue RebuildControl.Stop)
 
-analysisError :: String -> Chromatin ()
-analysisError _ = return ()
+crmRebuildE :: ChromatinE RebuildError ()
+crmRebuildE = do
+  config <- mapE RebuildError.Setting readConfig
+  mods <- mapE RebuildError.Analysis $ riboE $ analyzeConfigIO config
+  liftRibo $ executeModifications mods
 
 crmRebuild :: CommandArguments -> Chromatin ()
-crmRebuild _ = do
-  config <- readConfig
-  analysis <- analyzeConfigIO config
-  case analysis of
-    Right mods -> executeModifications mods
-    Left e -> analysisError e
+crmRebuild _ =
+  runRiboReport "rebuild" crmRebuildE

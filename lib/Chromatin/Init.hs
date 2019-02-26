@@ -2,14 +2,15 @@ module Chromatin.Init(
   initialize,
 ) where
 
-import Data.Default.Class (Default(def))
-import System.Log.Logger (updateGlobalLogger, setLevel, Priority(ERROR))
 import Control.Monad.IO.Class (liftIO)
-import UnliftIO.STM (TVar)
+import Data.Default.Class (Default(def))
 import Neovim (Neovim)
 import Neovim.Context.Internal (Config(customConfig), asks')
 import Ribosome.Control.Ribosome (newRibosome, Ribosome)
 import Ribosome.Internal.IO (retypeNeovim)
+import System.Log.Logger (updateGlobalLogger, setLevel, Priority(ERROR))
+import UnliftIO.STM (TVar)
+
 import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Env (Env)
 import Chromatin.Rebuild (crmRebuild)

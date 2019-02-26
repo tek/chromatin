@@ -50,7 +50,7 @@ function! s:run_chromatin(stack, ...) abort "{{{
   if !a:0
     echom 'chromatin: running chromatin…'
   endif
-  return jobstart(a:stack . ' exec chromatin', { 'rpc': v:true, 'on_stderr': 'ChromatinJobStderr', 'cwd': s:plugin_base })
+  return jobstart(a:stack . ' exec chromatin -- -v DEBUG -l/home/tek/c-log', { 'rpc': v:true, 'on_stderr': 'ChromatinJobStderr', 'cwd': s:plugin_base })
 endfunction "}}}
 
 function! s:install_chromatin(stack) abort "{{{

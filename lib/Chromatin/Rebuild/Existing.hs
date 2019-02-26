@@ -3,10 +3,10 @@ module Chromatin.Rebuild.Existing(
   stackRpluginReady,
 ) where
 
-import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Lazy.Internal as B (unpackChars)
 import Data.List.Split (linesBy)
 import GHC.IO.Exception (IOException)
+import qualified Ribosome.Log as Log (debugR)
 import System.Exit (ExitCode(ExitSuccess, ExitFailure))
 import System.FilePath ((</>))
 import System.Process.Typed (readProcessStderr, proc, setWorkingDir)
@@ -46,7 +46,6 @@ stackRpluginReadyFromBuild path = do
   where
     check = do
       output <- stackDryRun path
-      liftIO $ print output
       return $ case output of
         Right (ExitSuccess, lines') ->
           if "Would build:" `elem` lines'
@@ -61,7 +60,6 @@ stackRpluginReadyFromGit :: RpluginName -> FilePath -> Chromatin RpluginState
 stackRpluginReadyFromGit name path = do
   stored <- gitRefFromCache name
   current <- gitRefFromRepo path
-  liftIO $ print current
   maybe (stackRpluginReadyFromBuild path) (checkRef stored) current
   where
     checkRef stored current =
@@ -92,6 +90,7 @@ runPreexisting task@(RebuildTask name source _) =
 
 handleExisting :: RebuildTask -> Chromatin RunExistingResult
 handleExisting task@(RebuildTask name source dev) = do
+  Log.debugR $ "handling " ++ show task
   state <- rpluginReady name source dev
   case state of
     RpluginState.Ready -> runPreexisting task

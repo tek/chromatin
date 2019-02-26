@@ -2,9 +2,9 @@ module Chromatin.Settings(
   rplugins,
 ) where
 
+import Chromatin.Data.RpluginConfig (RpluginConfig)
 import Data.Default.Class (Default(def))
 import Ribosome.Config.Setting
-import Chromatin.Data.Rplugins (Rplugins)
 
-rplugins :: Setting Rplugins
+rplugins :: Setting [RpluginConfig]
 rplugins = Setting "rplugins" True (Just def)

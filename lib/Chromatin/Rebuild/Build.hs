@@ -12,6 +12,7 @@ import GHC.IO.Exception (ExitCode(ExitFailure))
 import GHC.IO.Handle.Types (Handle)
 import Neovim (Buffer, vim_command', vim_get_current_buffer', vim_command, buffer_get_number')
 import Ribosome.Api.Echo (echom)
+import qualified Ribosome.Log as Log (debugR)
 import System.FilePath ((</>))
 import System.Process.Typed (ProcessConfig, setStdout, useHandleClose, readProcessStderr, proc, setWorkingDir)
 import UnliftIO.Directory (
@@ -128,8 +129,10 @@ updateProjectRef name path = do
   traverse_ (storeProjectRef name) ref
 
 installRplugin :: RpluginName -> RpluginSource -> Chromatin InstallResult
-installRplugin name source = do
+installRplugin name@(RpluginName n) source = do
+  Log.debugR $ "installing " ++ n
   result <- installRpluginFromSource name source
+  Log.debugR $ "installed " ++ n ++ ": " ++ show result
   case result of
     Right path -> do
       traverse_ (updateProjectRef name) path

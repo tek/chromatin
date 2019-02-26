@@ -5,7 +5,14 @@ module Chromatin.Config(
   analyzeConfigIO,
 ) where
 
-import Chromatin.Data.Chromatin (Chromatin)
+import Data.Foldable (find)
+import Data.Maybe (fromMaybe)
+import Ribosome.Config.Setting (SettingError, settingR)
+import qualified Ribosome.Control.Ribo as Ribo (inspect)
+import System.FilePath (takeFileName)
+import Text.ParserCombinators.Parsec
+
+import Chromatin.Data.Chromatin (Chromatin, ChromatinE)
 import qualified Chromatin.Data.Env as Env (rplugins)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginConfig (RpluginConfig(RpluginConfig))
@@ -13,15 +20,9 @@ import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.RpluginSource (RpluginSource(..), HackageDepspec(HackageDepspec), PypiDepspec(PypiDepspec))
 import Chromatin.Data.Rplugins (Rplugins(Rplugins))
 import qualified Chromatin.Settings as S (rplugins)
-import Data.Foldable (find)
-import Data.Maybe (fromMaybe)
-import Ribosome.Config.Setting (setting)
-import qualified Ribosome.Control.Ribo as Ribo (inspect)
-import System.FilePath (takeFileName)
-import Text.ParserCombinators.Parsec
 
-readConfig :: Chromatin Rplugins
-readConfig = setting S.rplugins
+readConfig :: ChromatinE SettingError Rplugins
+readConfig = Rplugins <$> settingR S.rplugins
 
 data RpluginModification =
   RpluginNew RpluginName RpluginSource Bool
