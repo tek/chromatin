@@ -47,7 +47,7 @@ runRpluginStack (RpluginName name) path debug =
   where
     opts = Map.fromList [("cwd" :: ByteString, toObject path), ("rpc", toObject True)]
     logParam
-      | debug = " -v DEBUG -l /tmp/chromatin-debug/" ++ name
+      | debug = " -- -v DEBUG -l /tmp/chromatin-debug/" ++ name
       | otherwise = ""
 
 pypiPluginExecutable :: RpluginName -> Chromatin FilePath
