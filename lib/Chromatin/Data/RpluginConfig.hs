@@ -14,6 +14,7 @@ data RpluginConfig =
   RpluginConfig {
     spec :: String,
     name :: Maybe RpluginName,
-    dev :: Maybe Bool
+    dev :: Maybe Bool,
+    debug :: Maybe Bool
   }
   deriving (Eq, Show, Generic, MsgpackDecode, MsgpackEncode)

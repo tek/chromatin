@@ -17,7 +17,7 @@ import qualified Chromatin.Data.Env as Env (rplugins)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginConfig (RpluginConfig(RpluginConfig))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
-import Chromatin.Data.RpluginSource (RpluginSource(..), HackageDepspec(HackageDepspec), PypiDepspec(PypiDepspec))
+import Chromatin.Data.RpluginSource (HackageDepspec(HackageDepspec), PypiDepspec(PypiDepspec), RpluginSource(..))
 import Chromatin.Data.Rplugins (Rplugins(Rplugins))
 import qualified Chromatin.Settings as S (rplugins)
 
@@ -25,11 +25,11 @@ readConfig :: ChromatinE SettingError Rplugins
 readConfig = Rplugins <$> settingR S.rplugins
 
 data RpluginModification =
-  RpluginNew RpluginName RpluginSource Bool
+  RpluginNew RpluginName RpluginSource Bool Bool
   |
   RpluginRemove Rplugin
   |
-  RpluginUpdate Rplugin RpluginSource Bool
+  RpluginUpdate Rplugin RpluginSource Bool Bool
   |
   RpluginKeep Rplugin
   deriving (Eq, Show)
@@ -76,11 +76,11 @@ modifyExisting :: RpluginSource -> Rplugin -> RpluginModification
 modifyExisting _ _ = undefined
 
 modification :: [Rplugin] -> RpluginConfig -> Either String RpluginModification
-modification current (RpluginConfig spec explicitName dev) = do
+modification current (RpluginConfig spec explicitName dev debug) = do
   source <- sourceFromSpec spec
   let name = fromMaybe (nameFromSource source) explicitName
   let sameName = find (rpluginHasName name) current
-  return $ maybe (RpluginNew name source (fromMaybe False dev)) (modifyExisting source) sameName
+  return $ maybe (RpluginNew name source (fromMaybe False dev) (fromMaybe False debug)) (modifyExisting source) sameName
 
 removals :: [RpluginModification] -> [RpluginModification]
 removals _ = []

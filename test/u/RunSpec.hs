@@ -6,7 +6,7 @@ module RunSpec(
 
 import Control.Monad.IO.Class (liftIO)
 import Data.ByteString (ByteString)
-import Neovim (vim_call_function', toObject, vim_command)
+import Neovim (toObject, vim_call_function', vim_command)
 import Test.Framework
 import UnliftIO.Directory (getCurrentDirectory)
 
@@ -24,7 +24,7 @@ runSpec :: Chromatin ()
 runSpec = do
   cwd <- getCurrentDirectory
   let rplugin = Rplugin (RpluginName "chromatin") (Stack cwd)
-  result <- runRplugin rplugin
+  result <- runRplugin rplugin False
   _ <- vim_command "sleep 500m"
   exists <- vim_call_function' "exists" [toObject (":CrmDiag" :: ByteString)]
   liftIO $ assertEqual (RunRpluginResult.Success (ActiveRplugin 3 rplugin)) result

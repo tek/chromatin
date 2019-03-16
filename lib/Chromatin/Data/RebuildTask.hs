@@ -9,6 +9,7 @@ data RebuildTask =
   RebuildTask {
     name :: RpluginName,
     source :: RpluginSource,
-    dev :: Bool
+    dev :: Bool,
+    debug :: Bool
   }
   deriving Show

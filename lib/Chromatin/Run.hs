@@ -9,10 +9,10 @@ import Data.ByteString (ByteString)
 import Data.List.Split (linesBy)
 import qualified Data.Map as Map (fromList)
 import Data.MessagePack (Object)
-import Neovim (NeovimException, toObject, fromObject', vim_call_function')
+import Neovim (NeovimException, fromObject', toObject, vim_call_function')
 import qualified Neovim as NeovimException (NeovimException(ErrorMessage, ErrorResult))
 import System.FilePath ((</>))
-import qualified System.FilePath.Glob as Glob (globDir1, compile)
+import qualified System.FilePath.Glob as Glob (compile, globDir1)
 import UnliftIO.Exception (catch)
 
 import Chromatin.Data.ActiveRplugin (ActiveRplugin(ActiveRplugin))
@@ -41,10 +41,14 @@ jobstart :: [Object] -> Chromatin (Either String Int)
 jobstart args =
   catch (Right <$> unsafeJobstart args) (return . jobstartFailure)
 
-runRpluginStack :: RpluginName -> FilePath -> Chromatin (Either String Int)
-runRpluginStack (RpluginName name) path = do
-  let opts = Map.fromList [("cwd" :: ByteString, toObject path), ("rpc", toObject True)]
-  jobstart [toObject $ "stack exec " ++ name, toObject opts]
+runRpluginStack :: RpluginName -> FilePath -> Bool -> Chromatin (Either String Int)
+runRpluginStack (RpluginName name) path debug =
+  jobstart [toObject $ "stack exec " ++ name ++ logParam, toObject opts]
+  where
+    opts = Map.fromList [("cwd" :: ByteString, toObject path), ("rpc", toObject True)]
+    logParam
+      | debug = " -v DEBUG -l /tmp/chromatin-debug/" ++ name
+      | otherwise = ""
 
 pypiPluginExecutable :: RpluginName -> Chromatin FilePath
 pypiPluginExecutable name = do
@@ -76,14 +80,14 @@ runRpluginPypi rpluginName@(RpluginName name) = do
       jobstart [toObject [toObject exe, toObject start, toObject package], toObject opts]
     Nothing -> return $ Left $ "no `lib/python` directory in virtualenv for `" ++ name ++ "`"
 
-runRplugin' :: RpluginName -> RpluginSource -> Chromatin (Either String Int)
-runRplugin' name (Stack path) = runRpluginStack name path
-runRplugin' name (Pypi _) = runRpluginPypi name
-runRplugin' _ _ = return (Left "NI")
+runRplugin' :: RpluginName -> RpluginSource -> Bool -> Chromatin (Either String Int)
+runRplugin' name (Stack path) debug = runRpluginStack name path debug
+runRplugin' name (Pypi _) _ = runRpluginPypi name
+runRplugin' _ _ _ = return (Left "NI")
 
-runRplugin :: Rplugin -> Chromatin RunRpluginResult
-runRplugin rplugin@(Rplugin name source) = do
-  result <- runRplugin' name source
+runRplugin :: Rplugin -> Bool -> Chromatin RunRpluginResult
+runRplugin rplugin@(Rplugin name source) debug = do
+  result <- runRplugin' name source debug
   return $ case result of
     Right channelId -> Success (ActiveRplugin channelId rplugin)
     Left err -> Failure (linesBy (=='\n') err)

@@ -9,7 +9,7 @@ import GHC.IO.Exception (IOException)
 import qualified Ribosome.Log as Log (debugR)
 import System.Exit (ExitCode(ExitSuccess, ExitFailure))
 import System.FilePath ((</>))
-import System.Process.Typed (readProcessStderr, proc, setWorkingDir)
+import System.Process.Typed (proc, readProcessStderr, setWorkingDir)
 import UnliftIO (tryIO)
 import UnliftIO.Directory (doesPathExist)
 
@@ -22,8 +22,8 @@ import Chromatin.Data.RpluginState (RpluginState)
 import qualified Chromatin.Data.RpluginState as RpluginState (RpluginState(..))
 import Chromatin.Data.RunExistingResult (RunExistingResult)
 import qualified Chromatin.Data.RunExistingResult as RunExistingResult (RunExistingResult(..))
-import Chromatin.Git (gitRefFromRepo, gitRefFromCache)
-import Chromatin.Run (runRplugin, RunRpluginResult, pypiPluginPackage)
+import Chromatin.Git (gitRefFromCache, gitRefFromRepo)
+import Chromatin.Run (RunRpluginResult, pypiPluginPackage, runRplugin)
 import qualified Chromatin.Run as RunRpluginResult (RunRpluginResult(..))
 
 runPreexistingResult :: RebuildTask -> RunRpluginResult -> RunExistingResult
@@ -85,11 +85,11 @@ rpluginReady name (Pypi _) _ = do
 rpluginReady _ source _ = return $ RpluginState.Broken $ "NI: rpluginReady for " ++ show source
 
 runPreexisting :: RebuildTask -> Chromatin RunExistingResult
-runPreexisting task@(RebuildTask name source _) =
-  runPreexistingResult task <$> runRplugin (Rplugin name source)
+runPreexisting task@(RebuildTask name source _ debug) =
+  runPreexistingResult task <$> runRplugin (Rplugin name source) debug
 
 handleExisting :: RebuildTask -> Chromatin RunExistingResult
-handleExisting task@(RebuildTask name source dev) = do
+handleExisting task@(RebuildTask name source dev _) = do
   Log.debugR $ "handling " ++ show task
   state <- rpluginReady name source dev
   case state of

@@ -20,8 +20,8 @@ import Test ()
 
 rplugins :: [RpluginConfig]
 rplugins = [
-  RpluginConfig "hackage:proteome-0.1.0.0" (Just (RpluginName "proteome")) Nothing,
-  RpluginConfig "hackage:flagellum" Nothing Nothing
+  RpluginConfig "hackage:proteome-0.1.0.0" (Just (RpluginName "proteome")) Nothing Nothing,
+  RpluginConfig "hackage:flagellum" Nothing Nothing Nothing
   ]
 
 rebuildSpec :: Chromatin ()
