@@ -28,9 +28,11 @@ pluginRpcName rpcName rplugin =
 waitForPlugin :: ActiveRplugin -> Chromatin (Maybe ActiveRplugin)
 waitForPlugin rplugin = do
   result <- waitForFunction (pluginRpcName "Poll" rplugin) def
-  return $ case result of
-    Right _ -> Just rplugin
-    Left _ -> Nothing
+  case result of
+    Right _ -> return $ Just rplugin
+    Left _ -> do
+      reportError "rebuild-init" $ "poll function of `" ++ activeRpluginName rplugin ++ "` did not appear"
+      return Nothing
 
 stageError :: ActiveRplugin -> Int -> NeovimException -> Chromatin ()
 stageError rplugin stage err =
