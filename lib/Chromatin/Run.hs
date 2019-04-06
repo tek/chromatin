@@ -13,6 +13,7 @@ import Neovim (NeovimException, fromObject', toObject, vim_call_function')
 import qualified Neovim as NeovimException (NeovimException(ErrorMessage, ErrorResult))
 import System.FilePath ((</>))
 import qualified System.FilePath.Glob as Glob (compile, globDir1)
+import UnliftIO.Directory (createDirectoryIfMissing)
 import UnliftIO.Exception (catch)
 
 import Chromatin.Data.ActiveRplugin (ActiveRplugin(ActiveRplugin))
@@ -42,7 +43,8 @@ jobstart args =
   catch (Right <$> unsafeJobstart args) (return . jobstartFailure)
 
 runRpluginStack :: RpluginName -> FilePath -> Bool -> Chromatin (Either String Int)
-runRpluginStack (RpluginName name) path debug =
+runRpluginStack (RpluginName name) path debug = do
+  createDirectoryIfMissing False "/tmp/chromatin-debug"
   jobstart [toObject $ "stack exec " ++ name ++ logParam, toObject opts]
   where
     opts = Map.fromList [("cwd" :: ByteString, toObject path), ("rpc", toObject True)]
