@@ -1,8 +1,4 @@
-module Chromatin.Run(
-  runRplugin,
-  RunRpluginResult(..),
-  pypiPluginPackage,
-) where
+module Chromatin.Run where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.ByteString (ByteString)

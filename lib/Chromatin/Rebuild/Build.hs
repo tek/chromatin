@@ -10,15 +10,15 @@ import Data.Foldable (traverse_)
 import Data.List.Split (linesBy)
 import GHC.IO.Exception (ExitCode(ExitFailure))
 import GHC.IO.Handle.Types (Handle)
-import Neovim (Buffer, vim_command', vim_get_current_buffer', vim_command, buffer_get_number')
+import Neovim (Buffer, buffer_get_number', vim_command, vim_command', vim_get_current_buffer')
 import Ribosome.Api.Echo (echom)
 import qualified Ribosome.Log as Log (debugR)
 import System.FilePath ((</>))
-import System.Process.Typed (ProcessConfig, setStdout, useHandleClose, readProcessStderr, proc, setWorkingDir)
+import System.Process.Typed (ProcessConfig, proc, runProcess, setStderr, setStdout, setWorkingDir, useHandleClose)
 import UnliftIO.Directory (
-  getXdgDirectory,
   XdgDirectory(XdgData, XdgCache),
   createDirectoryIfMissing,
+  getXdgDirectory,
   removePathForcibly,
   )
 import UnliftIO.Temporary (withSystemTempFile)
@@ -26,7 +26,7 @@ import UnliftIO.Temporary (withSystemTempFile)
 import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(..))
-import Chromatin.Data.RpluginSource (RpluginSource(Hackage, Stack, Pypi), HackageDepspec(..), PypiDepspec(..))
+import Chromatin.Data.RpluginSource (HackageDepspec(..), PypiDepspec(..), RpluginSource(Hackage, Stack, Pypi))
 import Chromatin.Git (gitRefFromRepo, storeProjectRef)
 
 data InstallResult =
@@ -37,8 +37,8 @@ data InstallResult =
 
 tailInTerminal :: FilePath -> Chromatin Buffer
 tailInTerminal path = do
-  vim_command' $ "15split term://tail -f " ++ path
-  vim_get_current_buffer'
+  vim_command' $ "belowright 15split term://tail -f " ++ path
+  vim_get_current_buffer' <* vim_command' "normal! G" <* vim_command' "wincmd w"
 
 closeTerminal :: Buffer -> Chromatin ()
 closeTerminal buf = do
@@ -46,13 +46,15 @@ closeTerminal buf = do
   _ <- vim_command $ "silent! " ++ show num ++ "bwipeout!"
   return ()
 
-processWithStdoutFile :: MonadIO m => ProcessConfig stdin stdout stderr -> Handle -> m (Either String ())
-processWithStdoutFile processConfig logHandle = do
-  let pipe = setStdout (useHandleClose logHandle)
-  (code, err) <- readProcessStderr $ pipe processConfig
+processWithOutFile :: MonadIO m => ProcessConfig stdin stdout stderr -> Handle -> m (Either String ())
+processWithOutFile processConfig logHandle = do
+  code <- runProcess $ pipe processConfig
   return $ case code of
-    ExitFailure _ -> Left (B.unpackChars err)
+    ExitFailure _ -> Left "installation process failed"
     _ -> Right ()
+  where
+    stream = useHandleClose logHandle
+    pipe = setStdout stream . setStderr stream
 
 hackageProcess :: FilePath -> HackageDepspec -> ProcessConfig () () ()
 hackageProcess bindir (HackageDepspec spec) =
@@ -64,9 +66,9 @@ stackProcess path =
 
 processWithLog :: RpluginName -> ProcessConfig stdin stdout sderr -> Chromatin (Either String ())
 processWithLog (RpluginName name) processConfig =
-  withSystemTempFile "test-chromatin" $ \logFile logHandle -> do
+  withSystemTempFile "chromatin-install" $ \logFile logHandle -> do
     buf <- tailInTerminal logFile
-    result <- processWithStdoutFile processConfig logHandle
+    result <- processWithOutFile processConfig logHandle
     case result of
       Right _ -> do
         echom $ "installed `" ++ name ++ "`"
