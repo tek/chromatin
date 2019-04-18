@@ -37,7 +37,7 @@ function! s:job(cmd, output, next, error) abort "{{{
         \ 'cwd': s:plugin_base },
         \ )
   sleep 100m
-  execute '15split term://tail -f ' . output
+  execute 'belowright 15split term://tail -f ' . output
   let s:termbuf = bufnr('%')
   silent! normal! G
   silent! wincmd w
@@ -62,7 +62,7 @@ function! s:run_chromatin(stack, ...) abort "{{{
     echom 'chromatin: running chromatin…'
   endif
   return jobstart(
-        \ a:stack . ' --allow-different-user exec chromatin -- -v DEBUG -l/tmp/chromatin-run-log',
+        \ a:stack . ' exec chromatin -- -v DEBUG -l/tmp/chromatin-run-log',
         \ { 'rpc': v:true, 'on_stderr': 'ChromatinJobStderr',
         \ 'cwd': s:plugin_base },
         \ )
