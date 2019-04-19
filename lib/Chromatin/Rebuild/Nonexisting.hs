@@ -1,6 +1,4 @@
-module Chromatin.Rebuild.Nonexisting(
-  handleNonexisting,
-) where
+module Chromatin.Rebuild.Nonexisting where
 
 import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.RebuildTask (RebuildTask(RebuildTask))
@@ -10,6 +8,7 @@ import Chromatin.Data.RunBuiltResult (RunBuiltResult)
 import qualified Chromatin.Data.RunBuiltResult as RunBuiltResult (RunBuiltResult(..))
 import Chromatin.Data.RunExistingResult (RunExistingResult)
 import qualified Chromatin.Data.RunExistingResult as RunExistingResult (RunExistingResult(..))
+import qualified Chromatin.Log as Log
 import Chromatin.Rebuild.Build (InstallResult, installRplugin)
 import qualified Chromatin.Rebuild.Build as InstallResult (InstallResult(Success, Failure))
 import Chromatin.Run (RunRpluginResult, runRplugin)
@@ -21,7 +20,7 @@ runBuiltResult task (RunRpluginResult.Failure err) = RunBuiltResult.Failure task
 
 installSuccess :: RebuildTask -> Rplugin -> Chromatin RunBuiltResult
 installSuccess task rplugin =
-  fmap (runBuiltResult task) (runRplugin rplugin (RebuildTask.debug task))
+  runBuiltResult task <$> runRplugin rplugin (RebuildTask.debug task)
 
 installResult :: RebuildTask -> InstallResult -> Chromatin RunBuiltResult
 installResult task (InstallResult.Success rplugin) = installSuccess task rplugin

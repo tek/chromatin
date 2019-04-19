@@ -5,7 +5,6 @@ module Chromatin.Rebuild.Build(
 ) where
 
 import Control.Monad.IO.Class (MonadIO)
-import qualified Data.ByteString.Lazy.Internal as B (unpackChars)
 import Data.Foldable (traverse_)
 import Data.List.Split (linesBy)
 import GHC.IO.Exception (ExitCode(ExitFailure))
