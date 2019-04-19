@@ -7,7 +7,7 @@ import Data.Default.Class (def)
 import Data.Foldable (traverse_)
 import Data.Functor (void)
 import Data.Maybe (catMaybes)
-import Neovim (NeovimException, vim_call_function)
+import Neovim (NeovimException, vim_call_function, vim_command')
 import Ribosome.Api.Exists (waitForFunction)
 import qualified Ribosome.Api.Exists as Exists (function)
 import Ribosome.Error.Report (reportError)
@@ -65,3 +65,4 @@ initializeRplugins rplugins = do
   results <- traverse waitForPlugin rplugins
   let crmPlugins = catMaybes results
   runStages crmPlugins
+  vim_command' "silent! doautocmd User ChromatinInitialized"
