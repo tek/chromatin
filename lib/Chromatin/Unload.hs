@@ -1,17 +1,15 @@
-module Chromatin.Unload(
-  unloadRplugins,
-) where
+module Chromatin.Unload where
 
 import Data.Foldable (traverse_)
-import qualified Control.Lens as Lens (over)
-import qualified Ribosome.Control.Ribo as Ribo (modify)
-import Chromatin.Data.Rplugin (Rplugin)
+
 import Chromatin.Data.Chromatin (Chromatin)
-import qualified Chromatin.Data.Env as Env (_rplugins)
+import Chromatin.Data.Env (Env)
+import qualified Chromatin.Data.Env as Env (rplugins)
+import Chromatin.Data.Rplugin (Rplugin)
 
 unloadRplugin :: Rplugin -> Chromatin ()
 unloadRplugin rplugin =
-  Ribo.modify $ Lens.over Env._rplugins $ filter (rplugin ==)
+  modifyL @Env Env.rplugins $ filter (rplugin ==)
 
 unloadRplugins :: [Rplugin] -> Chromatin ()
 unloadRplugins =

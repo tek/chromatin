@@ -1,32 +1,24 @@
-module Chromatin.Test.Unit(
-  spec,
-  specWith,
-  specWithDef,
-  specConfig,
-) where
+module Chromatin.Test.Unit where
 
-import Data.Default.Class (def)
-import UnliftIO.STM (newTVarIO)
-import Ribosome.Test.Embed (Vars, TestConfig)
-import Ribosome.Test.Unit (unitSpec)
-import Chromatin.Data.Chromatin (Chromatin)
+import Chromatin.Data.Chromatin (ChromatinN)
 import Chromatin.Data.Env (Env)
 import Chromatin.Test.Config (defaultTestConfig, defaultTestConfigWith)
+import Data.Default (def)
+import Ribosome.Test.Embed (TestConfig, Vars)
+import Ribosome.Test.Unit (unitSpec)
 
-specConfig :: TestConfig -> Env -> Chromatin () -> IO ()
-specConfig conf e s = do
-  t <- newTVarIO e
-  unitSpec conf t s
+specConfig :: TestConfig -> Env -> ChromatinN () -> IO ()
+specConfig =
+  unitSpec
 
-spec :: Env -> Chromatin () -> IO ()
+spec :: Env -> ChromatinN () -> IO ()
 spec =
   specConfig defaultTestConfig
 
-specWith :: Env -> Chromatin () -> Vars -> IO ()
-specWith e s vars = do
-  t <- newTVarIO e
-  unitSpec (defaultTestConfigWith vars) t s
+specWith :: Env -> ChromatinN () -> Vars -> IO ()
+specWith e s vars =
+  unitSpec (defaultTestConfigWith vars) e s
 
-specWithDef :: Chromatin () -> Vars -> IO ()
+specWithDef :: ChromatinN () -> Vars -> IO ()
 specWithDef =
   specWith def

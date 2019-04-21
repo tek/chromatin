@@ -10,7 +10,7 @@ import Ribosome.Msgpack.Decode (MsgpackDecode)
 import Ribosome.Msgpack.Encode (MsgpackEncode)
 
 newtype RpluginName =
-  RpluginName String
+  RpluginName Text
   deriving (Eq, Show, Generic, NFData, MsgpackDecode, MsgpackEncode)
 
 instance NvimObject RpluginName where

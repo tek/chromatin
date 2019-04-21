@@ -4,12 +4,11 @@ module RebuildSpec(
   htf_thisModulesTests
 ) where
 
-import Data.Default.Class (Default(def))
-import Neovim (vim_command')
-import Ribosome.Config.Setting (updateSettingR)
+import Ribosome.Config.Setting (updateSetting)
+import Ribosome.System.Time (sleep)
 import Test.Framework
 
-import Chromatin.Data.Chromatin (Chromatin)
+import Chromatin.Data.Chromatin (ChromatinN)
 import Chromatin.Data.RpluginConfig (RpluginConfig(RpluginConfig))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Rebuild (crmRebuild)
@@ -24,11 +23,11 @@ rplugins = [
   RpluginConfig "hackage:flagellum" Nothing Nothing Nothing
   ]
 
-rebuildSpec :: Chromatin ()
+rebuildSpec :: ChromatinN ()
 rebuildSpec = do
-  updateSettingR S.rplugins rplugins
-  crmRebuild def
-  vim_command' "sleep 1"
+  updateSetting S.rplugins rplugins
+  crmRebuild
+  sleep 1
   gassertBool True
 
 test_rebuild :: IO ()

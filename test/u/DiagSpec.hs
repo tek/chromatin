@@ -4,24 +4,23 @@ module DiagSpec(
   htf_thisModulesTests
 ) where
 
-import Control.Monad.IO.Class (liftIO)
-import Data.Default.Class (Default(def))
-import Test.Framework
-import Ribosome.Api.Buffer (currentBufferContent)
-import Chromatin.Data.Chromatin (Chromatin)
-import Chromatin.Test.Unit (specWithDef)
+import Chromatin.Data.Chromatin (ChromatinN)
 import Chromatin.Diag (crmDiag)
+import Chromatin.Test.Unit (specWithDef)
 import Config (vars)
+import Control.Monad.IO.Class (liftIO)
+import Ribosome.Api.Buffer (currentBufferContent)
+import Test.Framework
 
-target :: [String]
+target :: [Text]
 target = [
   "Diagnostics",
   ""
   ]
 
-diagSpec :: Chromatin ()
+diagSpec :: ChromatinN ()
 diagSpec = do
-  crmDiag def
+  crmDiag
   content <- currentBufferContent
   liftIO $ assertEqual target content
 

@@ -5,10 +5,10 @@ module BuildSpec(
 ) where
 
 import Control.Monad.IO.Class (liftIO)
+import Path.IO (getCurrentDir)
 import Test.Framework
-import UnliftIO.Directory (getCurrentDirectory)
 
-import Chromatin.Data.Chromatin (Chromatin)
+import Chromatin.Data.Chromatin (ChromatinN)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.RpluginSource (RpluginSource(Stack))
@@ -17,9 +17,9 @@ import qualified Chromatin.Rebuild.Build as InstallResult (InstallResult(Success
 import Chromatin.Test.Unit (specWithDef)
 import Config (vars)
 
-stackSpec :: Chromatin ()
+stackSpec :: ChromatinN ()
 stackSpec = do
-  cwd <- getCurrentDirectory
+  cwd <- getCurrentDir
   let name = RpluginName "chromatin"
   let source = Stack cwd
   result <- installRplugin name source

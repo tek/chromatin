@@ -1,15 +1,13 @@
-module Chromatin.Data.RpluginSource(
-  HackageDepspec(..),
-  PypiDepspec(..),
-  RpluginSource(..),
-) where
+module Chromatin.Data.RpluginSource where
+
+import Path (Abs, Dir, Path)
 
 newtype HackageDepspec =
-  HackageDepspec String
+  HackageDepspec Text
   deriving (Show, Eq)
 
 newtype PypiDepspec =
-  PypiDepspec String
+  PypiDepspec Text
   deriving (Show, Eq)
 
 data RpluginSource =
@@ -18,7 +16,7 @@ data RpluginSource =
   }
   |
   Stack {
-    stackProject :: FilePath
+    stackProject :: Path Abs Dir
   }
   |
   Pypi {

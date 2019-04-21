@@ -1,35 +1,33 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 
-module RunSpec(
-  htf_thisModulesTests
-) where
+module RunSpec (htf_thisModulesTests) where
 
-import Control.Monad.IO.Class (liftIO)
 import Data.ByteString (ByteString)
-import Neovim (toObject, vim_call_function', vim_command)
+import Path.IO (getCurrentDir)
+import Ribosome.Msgpack.Encode (toMsgpack)
+import Ribosome.Nvim.Api.IO (vimCallFunction)
+import Ribosome.System.Time (sleep)
+import Ribosome.Test.Await (await)
+import Ribosome.Test.Tmux (tmuxGuiSpecDef)
 import Test.Framework
-import UnliftIO.Directory (getCurrentDirectory)
 
 import Chromatin.Data.ActiveRplugin (ActiveRplugin(ActiveRplugin))
-import Chromatin.Data.Chromatin (Chromatin)
+import Chromatin.Data.Chromatin (ChromatinN)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.RpluginSource (RpluginSource(Stack))
 import Chromatin.Run (runRplugin)
 import qualified Chromatin.Run as RunRpluginResult (RunRpluginResult(Success))
-import Chromatin.Test.Unit (specWithDef)
-import Config (vars)
 
-runSpec :: Chromatin ()
+runSpec :: ChromatinN ()
 runSpec = do
-  cwd <- getCurrentDirectory
+  cwd <- getCurrentDir
   let rplugin = Rplugin (RpluginName "chromatin") (Stack cwd)
   result <- runRplugin rplugin False
-  _ <- vim_command "sleep 500m"
-  exists <- vim_call_function' "exists" [toObject (":CrmDiag" :: ByteString)]
-  liftIO $ assertEqual (RunRpluginResult.Success (ActiveRplugin 3 rplugin)) result
-  liftIO $ assertEqual (toObject (2 :: Int)) exists
+  gassertEqual (RunRpluginResult.Success (ActiveRplugin 4 rplugin)) result
+  sleep 0.5
+  await (gassertEqual (toMsgpack (2 :: Int))) $ vimCallFunction "exists" [toMsgpack (":CrmDiag" :: ByteString)]
 
 test_run :: IO ()
 test_run =
-  vars >>= specWithDef runSpec
+  tmuxGuiSpecDef runSpec

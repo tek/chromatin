@@ -8,7 +8,7 @@ import Chromatin.Data.RebuildTask (RebuildTask)
 data RunExistingResult =
   Success ActiveRplugin
   |
-  Failure RebuildTask [String]
+  Failure RebuildTask [Text]
   |
   NotReady RebuildTask
   deriving Show

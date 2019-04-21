@@ -1,4 +1,4 @@
-import Neovim
+import Neovim (neovim, defaultConfig, plugins)
 
 import Chromatin.Plugin (plugin)
 

@@ -12,7 +12,7 @@ import Chromatin.Data.RpluginName (RpluginName)
 
 data RpluginConfig =
   RpluginConfig {
-    spec :: String,
+    spec :: Text,
     name :: Maybe RpluginName,
     dev :: Maybe Bool,
     debug :: Maybe Bool

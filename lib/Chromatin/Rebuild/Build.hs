@@ -1,28 +1,27 @@
-module Chromatin.Rebuild.Build(
-  installRplugin,
-  InstallResult(..),
-  venvDir,
-) where
+module Chromatin.Rebuild.Build where
 
+import Control.Monad.Catch (MonadMask, MonadThrow)
 import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Foldable (traverse_)
-import Data.List.Split (linesBy)
 import GHC.IO.Exception (ExitCode(ExitFailure))
 import GHC.IO.Handle.Types (Handle)
-import Neovim (Buffer, buffer_get_number', vim_command, vim_command', vim_get_current_buffer')
-import Ribosome.Api.Echo (echom)
-import qualified Ribosome.Log as Log (debugR)
-import System.FilePath ((</>))
-import System.Process.Typed (ProcessConfig, proc, runProcess, setStderr, setStdout, setWorkingDir, useHandleClose)
-import UnliftIO.Directory (
+import Path (Abs, Dir, File, Path, parseRelDir, reldir, toFilePath, (</>))
+import Path.IO (
   XdgDirectory(XdgData, XdgCache),
-  createDirectoryIfMissing,
-  getXdgDirectory,
-  removePathForcibly,
+  createDirIfMissing,
+  getXdgDir,
+  withSystemTempFile,
   )
-import UnliftIO.Temporary (withSystemTempFile)
+import Ribosome.Api.Echo (echom)
+import Ribosome.Data.PersistError (PersistError)
+import Ribosome.Data.SettingError (SettingError)
+import qualified Ribosome.Log as Log (debug)
+import Ribosome.Nvim.Api.Data (Buffer)
+import Ribosome.Nvim.Api.IO (bufferGetNumber, vimCommand, vimGetCurrentBuffer)
+import System.Directory (removePathForcibly)
+import System.Process.Typed (ProcessConfig, proc, runProcess, setStderr, setStdout, setWorkingDir, useHandleClose)
 
-import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(..))
 import Chromatin.Data.RpluginSource (HackageDepspec(..), PypiDepspec(..), RpluginSource(Hackage, Stack, Pypi))
@@ -31,21 +30,27 @@ import Chromatin.Git (gitRefFromRepo, storeProjectRef)
 data InstallResult =
   Success Rplugin
   |
-  Failure [String]
+  Failure [Text]
   deriving (Show, Eq)
 
-tailInTerminal :: FilePath -> Chromatin Buffer
+tailInTerminal ::
+  NvimE e m =>
+  Path Abs File ->
+  m Buffer
 tailInTerminal path = do
-  vim_command' $ "belowright 15split term://tail -f " ++ path
-  vim_get_current_buffer' <* vim_command' "normal! G" <* vim_command' "wincmd w"
+  vimCommand $ "belowright 15split term://tail -f " <> toText (toFilePath path)
+  vimGetCurrentBuffer <* vimCommand "normal! G" <* vimCommand "wincmd w"
 
-closeTerminal :: Buffer -> Chromatin ()
+closeTerminal ::
+  NvimE e m =>
+  Buffer ->
+  m ()
 closeTerminal buf = do
-  num <- buffer_get_number' buf
-  _ <- vim_command $ "silent! " ++ show num ++ "bwipeout!"
+  num <- bufferGetNumber buf
+  _ <- vimCommand $ "silent! " <> show num <> "bwipeout!"
   return ()
 
-processWithOutFile :: MonadIO m => ProcessConfig stdin stdout stderr -> Handle -> m (Either String ())
+processWithOutFile :: MonadIO m => ProcessConfig stdin stdout stderr -> Handle -> m (Either Text ())
 processWithOutFile processConfig logHandle = do
   code <- runProcess $ pipe processConfig
   return $ case code of
@@ -55,63 +60,118 @@ processWithOutFile processConfig logHandle = do
     stream = useHandleClose logHandle
     pipe = setStdout stream . setStderr stream
 
-hackageProcess :: FilePath -> HackageDepspec -> ProcessConfig () () ()
+hackageProcess ::
+  Path Abs Dir ->
+  HackageDepspec ->
+  ProcessConfig () () ()
 hackageProcess bindir (HackageDepspec spec) =
-  proc "cabal" ["new-install", "--symlink-bindir", bindir, spec]
+  proc "cabal" ["new-install", "--symlink-bindir", toFilePath bindir, toString spec]
 
-stackProcess :: FilePath -> ProcessConfig () () ()
+stackProcess :: Path Abs Dir -> ProcessConfig () () ()
 stackProcess path =
-  setWorkingDir path $ proc "stack" ["build"]
+  setWorkingDir (toFilePath path) $ proc "stack" ["build"]
 
-processWithLog :: RpluginName -> ProcessConfig stdin stdout sderr -> Chromatin (Either String ())
+processWithLog ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  MonadMask m =>
+  RpluginName ->
+  ProcessConfig stdin stdout sderr ->
+  m (Either Text ())
 processWithLog (RpluginName name) processConfig =
   withSystemTempFile "chromatin-install" $ \logFile logHandle -> do
     buf <- tailInTerminal logFile
     result <- processWithOutFile processConfig logHandle
     case result of
       Right _ -> do
-        echom $ "installed `" ++ name ++ "`"
+        echom $ "installed `" <> name <> "`"
         closeTerminal buf
-      Left _ -> echom $  "failed to install `" ++ name ++ "`"
+      Left _ -> echom $  "failed to install `" <> name <> "`"
     return result
 
-installHackageProcess :: RpluginName -> FilePath -> HackageDepspec -> Chromatin (Either String ())
+installHackageProcess ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  MonadMask m =>
+  RpluginName ->
+  Path Abs Dir ->
+  HackageDepspec ->
+  m (Either Text ())
 installHackageProcess name bindir spec =
   processWithLog name $ hackageProcess bindir spec
 
-installStackProcess :: RpluginName -> FilePath -> Chromatin (Either String ())
+installStackProcess ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  MonadMask m =>
+  RpluginName ->
+  Path Abs Dir ->
+  m (Either Text ())
 installStackProcess name path =
   processWithLog name $ stackProcess path
 
-venvProcess :: FilePath -> ProcessConfig () () ()
+venvProcess :: Path Abs Dir -> ProcessConfig () () ()
 venvProcess dir =
-  proc "python3" ["-m", "venv", dir, "--upgrade"]
+  proc "python3" ["-m", "venv", toFilePath dir, "--upgrade"]
 
-venvDir :: RpluginName -> Chromatin FilePath
-venvDir (RpluginName name) = getXdgDirectory XdgCache ("chromatin-hs" </> "venvs" </> name)
+venvDir ::
+  MonadIO m =>
+  MonadThrow m =>
+  RpluginName ->
+  m (Path Abs Dir)
+venvDir (RpluginName name) = do
+  nameSeg <- parseRelDir (toString name)
+  getXdgDir XdgCache (Just ([reldir|chromatin-hs/venvs|] </> nameSeg))
 
-createVenvProcess :: RpluginName -> Chromatin (Either String FilePath)
+createVenvProcess ::
+  MonadIO m =>
+  MonadThrow m =>
+  MonadRibo m =>
+  NvimE e m =>
+  MonadMask m =>
+  RpluginName ->
+  m (Either Text (Path Abs Dir))
 createVenvProcess name = do
   dir <- venvDir name
-  removePathForcibly dir
+  liftIO $ removePathForcibly (toFilePath dir)
   r <- processWithLog name (venvProcess dir)
   return $ dir <$ r
 
-pipProcess :: PypiDepspec -> FilePath -> ProcessConfig () () ()
+pipProcess :: PypiDepspec -> Path Abs Dir -> ProcessConfig () () ()
 pipProcess (PypiDepspec spec) venv =
-  proc (venv </> "bin" </> "pip") ["install", "--no-cache", "--upgrade", spec]
+  proc (toFilePath $ venv </> [reldir|bin/pip|]) ["install", "--no-cache", "--upgrade", toString spec]
 
-installPypiProcess :: RpluginName -> PypiDepspec -> FilePath -> Chromatin (Either String ())
+installPypiProcess ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  MonadMask m =>
+  RpluginName ->
+  PypiDepspec ->
+  Path Abs Dir ->
+  m (Either Text ())
 installPypiProcess name spec venv =
   processWithLog name (pipProcess spec venv)
 
-binaryDir :: Chromatin FilePath
-binaryDir = getXdgDirectory XdgData ("chromatin" </> "bin")
+binaryDir ::
+  MonadIO m =>
+  m (Path Abs Dir)
+binaryDir = getXdgDir XdgData (Just [reldir|chromatin/bin|])
 
-installRpluginFromSource :: RpluginName -> RpluginSource -> Chromatin (Either String (Maybe FilePath))
+installRpluginFromSource ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  MonadMask m =>
+  RpluginName ->
+  RpluginSource ->
+  m (Either Text (Maybe (Path Abs Dir)))
 installRpluginFromSource name (Hackage spec) = do
   bindir <- binaryDir
-  createDirectoryIfMissing True bindir
+  createDirIfMissing True bindir
   result <- installHackageProcess name bindir spec
   return $ Nothing <$ result
 installRpluginFromSource name (Stack path) = do
@@ -124,18 +184,38 @@ installRpluginFromSource name (Pypi spec) = do
     Left e -> return $ Left e
   return $ Nothing <$ result
 
-updateProjectRef :: RpluginName -> FilePath -> Chromatin ()
+updateProjectRef ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  MonadThrow m =>
+  MonadBaseControl IO m =>
+  MonadDeepError e SettingError m =>
+  MonadDeepError e PersistError m =>
+  RpluginName ->
+  Path Abs Dir ->
+  m ()
 updateProjectRef name path = do
   ref <- gitRefFromRepo path
   traverse_ (storeProjectRef name) ref
 
-installRplugin :: RpluginName -> RpluginSource -> Chromatin InstallResult
+installRplugin ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  MonadMask m =>
+  MonadBaseControl IO m =>
+  MonadDeepError e SettingError m =>
+  MonadDeepError e PersistError m =>
+  RpluginName ->
+  RpluginSource ->
+  m InstallResult
 installRplugin name@(RpluginName n) source = do
-  Log.debugR $ "installing " ++ n
+  Log.debug $ "installing " <> n
   result <- installRpluginFromSource name source
-  Log.debugR $ "installed " ++ n ++ ": " ++ show result
+  Log.debug $ "installed " <> n <> ": " <> show result
   case result of
     Right path -> do
       traverse_ (updateProjectRef name) path
       return $ Success $ Rplugin name source
-    Left err -> return $ Failure $ linesBy (=='\n') err
+    Left err -> return $ Failure $ lines err

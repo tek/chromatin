@@ -1,7 +1,13 @@
 resolver: lts-12.26
 packages:
 - .
-# - ribosome
+- ../ribosome/modules/core
+- ../ribosome/modules/test
+- ../chiasma
+- ../cornea
+- ../nvim-hs
 extra-deps:
-  - pretty-terminal-0.1.0.0
-  - ribosome-0.2.2.0
+- pretty-terminal-0.1.0.0
+- base-noprelude-4.11.1.0
+- posix-pty-0.2.1.1
+  # - ribosome-0.2.2.0

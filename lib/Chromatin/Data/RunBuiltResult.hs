@@ -10,12 +10,12 @@ data RunBuiltResult =
   |
   Failure {
     task :: RebuildTask,
-    errors :: [String]
+    errors :: [Text]
     }
   |
   PreviousFailure {
-    stage :: String,
+    stage :: Text,
     task :: RebuildTask,
-    errors :: [String]
+    errors :: [Text]
   }
   deriving Show

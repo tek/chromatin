@@ -1,19 +1,17 @@
-module Chromatin.Rebuild.Existing(
-  handleExisting,
-  stackRpluginReady,
-) where
+module Chromatin.Rebuild.Existing where
 
-import qualified Data.ByteString.Lazy.Internal as B (unpackChars)
-import Data.List.Split (linesBy)
+import Control.Exception.Lifted (try)
+import Control.Monad.Catch (MonadThrow)
+import Control.Monad.Trans.Control (MonadBaseControl)
 import GHC.IO.Exception (IOException)
-import qualified Ribosome.Log as Log (debugR)
+import Path (Abs, Dir, Path, relfile, toFilePath, (</>))
+import Path.IO (doesFileExist, isLocationOccupied)
+import Ribosome.Data.PersistError (PersistError)
+import Ribosome.Data.SettingError (SettingError)
+import qualified Ribosome.Log as Log (debug)
 import System.Exit (ExitCode(ExitSuccess, ExitFailure))
-import System.FilePath ((</>))
 import System.Process.Typed (proc, readProcessStderr, setWorkingDir)
-import UnliftIO (tryIO)
-import UnliftIO.Directory (doesPathExist)
 
-import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.RebuildTask (RebuildTask(..))
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName)
@@ -30,19 +28,32 @@ runPreexistingResult :: RebuildTask -> RunRpluginResult -> RunExistingResult
 runPreexistingResult _ (RunRpluginResult.Success active) = RunExistingResult.Success active
 runPreexistingResult task (RunRpluginResult.Failure err) = RunExistingResult.Failure task err
 
-unsafeStackDryRun :: FilePath -> Chromatin (ExitCode, [String])
+unsafeStackDryRun ::
+  MonadIO m =>
+  Path Abs Dir ->
+  m (ExitCode, [Text])
 unsafeStackDryRun path = do
-  result <- readProcessStderr $ setWorkingDir path $ proc "stack" ["build", "--dry-run"]
-  return $ linesBy (=='\n') . B.unpackChars <$> result
+  result <- readProcessStderr conf
+  return $ lines . decodeUtf8 <$> result
+  where
+    conf = setWorkingDir (toFilePath path) $ proc "stack" ["--no-install-ghc", "build", "--dry-run"]
 
-stackDryRun :: FilePath -> Chromatin (Either IOException (ExitCode, [String]))
+stackDryRun ::
+  MonadIO m =>
+  MonadBaseControl IO m =>
+  Path Abs Dir ->
+  m (Either IOException (ExitCode, [Text]))
 stackDryRun path =
-  tryIO $ unsafeStackDryRun path
+  try $ unsafeStackDryRun path
 
-stackRpluginReadyFromBuild :: FilePath -> Chromatin RpluginState
+stackRpluginReadyFromBuild ::
+  MonadIO m =>
+  MonadBaseControl IO m =>
+  Path Abs Dir ->
+  m RpluginState
 stackRpluginReadyFromBuild path = do
-  isStackRepo <- doesPathExist $ path </> "stack.yaml"
-  if isStackRepo then check else return $ RpluginState.Broken $ "not a stack package: " ++ path
+  isStackRepo <- doesFileExist $ path </> [relfile|stack.yaml|]
+  if isStackRepo then check else return $ RpluginState.Broken $ "not a stack package: " <> (toText . toFilePath) path
   where
     check = do
       output <- stackDryRun path
@@ -52,11 +63,21 @@ stackRpluginReadyFromBuild path = do
           then RpluginState.Incomplete
           else RpluginState.Ready
         Right (ExitFailure _, lines') ->
-          RpluginState.Broken $ "stack execution failed in " ++ path ++ ": " ++ show lines'
+          RpluginState.Broken $ "stack execution failed in " <> (toText . toFilePath) path <> ": " <> show lines'
         Left err ->
-          RpluginState.Broken $ "could not execute `stack build` in " ++ path ++ ": " ++ show err
+          RpluginState.Broken $ "could not execute `stack build` in " <> (toText . toFilePath) path <> ": " <> show err
 
-stackRpluginReadyFromGit :: RpluginName -> FilePath -> Chromatin RpluginState
+stackRpluginReadyFromGit ::
+  NvimE e m =>
+  MonadRibo m =>
+  MonadIO m =>
+  MonadThrow m =>
+  MonadBaseControl IO m =>
+  MonadDeepError e SettingError m =>
+  MonadDeepError e PersistError m =>
+  RpluginName ->
+  Path Abs Dir ->
+  m RpluginState
 stackRpluginReadyFromGit name path = do
   stored <- gitRefFromCache name
   current <- gitRefFromRepo path
@@ -65,32 +86,82 @@ stackRpluginReadyFromGit name path = do
     checkRef stored current =
       return $ if current `elem` stored then RpluginState.Ready else RpluginState.Incomplete
 
-stackRpluginReadyFromGitOrBuild :: RpluginName -> FilePath -> Chromatin RpluginState
+stackRpluginReadyFromGitOrBuild ::
+  NvimE e m =>
+  MonadRibo m =>
+  MonadIO m =>
+  MonadThrow m =>
+  MonadBaseControl IO m =>
+  MonadDeepError e SettingError m =>
+  MonadDeepError e PersistError m =>
+  RpluginName ->
+  Path Abs Dir ->
+  m RpluginState
 stackRpluginReadyFromGitOrBuild name path = do
-  isGitRepo <- doesPathExist $ path </> ".git"
+  isGitRepo <- isLocationOccupied $ path </> [relfile|.git|]
   if isGitRepo then stackRpluginReadyFromGit name path else stackRpluginReadyFromBuild path
 
-stackRpluginReady :: RpluginName -> FilePath -> Bool -> Chromatin RpluginState
+stackRpluginReady ::
+  NvimE e m =>
+  MonadRibo m =>
+  MonadIO m =>
+  MonadThrow m =>
+  MonadBaseControl IO m =>
+  MonadDeepError e SettingError m =>
+  MonadDeepError e PersistError m =>
+  RpluginName ->
+  Path Abs Dir ->
+  Bool ->
+  m RpluginState
 stackRpluginReady name path =
   checkDev
   where
     checkDev True = stackRpluginReadyFromBuild path
     checkDev False = stackRpluginReadyFromGitOrBuild name path
 
-rpluginReady :: RpluginName -> RpluginSource -> Bool -> Chromatin RpluginState
+rpluginReady ::
+  NvimE e m =>
+  MonadRibo m =>
+  MonadIO m =>
+  MonadThrow m =>
+  MonadBaseControl IO m =>
+  MonadDeepError e SettingError m =>
+  MonadDeepError e PersistError m =>
+  RpluginName ->
+  RpluginSource ->
+  Bool ->
+  m RpluginState
 rpluginReady name (Stack path) dev = stackRpluginReady name path dev
 rpluginReady name (Pypi _) _ = do
   package <- pypiPluginPackage name
   return $ maybe RpluginState.Incomplete (const RpluginState.Ready) package
-rpluginReady _ source _ = return $ RpluginState.Broken $ "NI: rpluginReady for " ++ show source
+rpluginReady _ source _ = return $ RpluginState.Broken $ "NI: rpluginReady for " <> show source
 
-runPreexisting :: RebuildTask -> Chromatin RunExistingResult
+runPreexisting ::
+  NvimE e m =>
+  MonadRibo m =>
+  MonadIO m =>
+  MonadThrow m =>
+  MonadBaseControl IO m =>
+  MonadDeepError e SettingError m =>
+  MonadDeepError e PersistError m =>
+  RebuildTask ->
+  m RunExistingResult
 runPreexisting task@(RebuildTask name source _ debug) =
   runPreexistingResult task <$> runRplugin (Rplugin name source) debug
 
-handleExisting :: RebuildTask -> Chromatin RunExistingResult
+handleExisting ::
+  NvimE e m =>
+  MonadRibo m =>
+  MonadIO m =>
+  MonadThrow m =>
+  MonadBaseControl IO m =>
+  MonadDeepError e SettingError m =>
+  MonadDeepError e PersistError m =>
+  RebuildTask ->
+  m RunExistingResult
 handleExisting task@(RebuildTask name source dev _) = do
-  Log.debugR $ "handling " ++ show task
+  Log.debug $ ("handling " :: Text) <> show task
   state <- rpluginReady name source dev
   case state of
     RpluginState.Ready -> runPreexisting task

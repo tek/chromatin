@@ -18,12 +18,12 @@ rplugins = Rplugins [
   RpluginConfig "hackage:flagellum" Nothing Nothing Nothing
   ]
 
-target :: Either String [RpluginModification]
-target = Right [
+target :: [RpluginModification]
+target = [
   RpluginNew (RpluginName "proteome") (Hackage (HackageDepspec "proteome-0.1.0.0")) False False,
   RpluginNew (RpluginName "flagellum") (Hackage (HackageDepspec "flagellum")) False False
   ]
 
 test_analyzeConfig :: IO ()
 test_analyzeConfig =
-  assertEqual target (analyzeConfig [] rplugins)
+  assertEqual target =<< assertRight (analyzeConfig [] rplugins)

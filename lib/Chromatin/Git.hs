@@ -1,45 +1,73 @@
 module Chromatin.Git where
 
-import Control.Monad.Trans.Except (runExceptT)
-import Data.ByteString.Lazy (ByteString)
+import Control.Exception.Lifted (try)
+import Control.Monad.Catch (MonadThrow)
+import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Data.ByteString.Lazy as B (stripSuffix)
-import qualified Data.ByteString.Lazy.Internal as B (unpackChars)
-import Data.Either (fromRight)
 import Data.Map (Map, (!?))
 import qualified Data.Map as Map (empty, insert)
 import Data.Maybe (fromMaybe)
-import Ribosome.Persist (persistLoad, persistStore)
+import Path (Abs, Dir, File, Path, Rel, relfile, toFilePath)
+import Ribosome.Data.PersistError (PersistError)
+import Ribosome.Data.SettingError (SettingError)
+import Ribosome.Persist (mayPersistLoad, persistStore)
 import System.Exit (ExitCode(ExitSuccess))
 import System.Process.Typed (proc, readProcessStdout)
-import UnliftIO.Exception (tryAny)
 
-import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 
-chomp :: ByteString -> ByteString
+chomp :: LByteString -> LByteString
 chomp s =
   fromMaybe s $ B.stripSuffix "\n" s
 
-persistName :: FilePath
-persistName = "project-refs"
+persistName :: Path Rel File
+persistName =
+  [relfile|project-refs|]
 
-loadProjectRefs :: Chromatin (Map String String)
+loadProjectRefs ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadThrow m =>
+  MonadDeepError e SettingError m =>
+  MonadDeepError e PersistError m =>
+  m (Map Text Text)
 loadProjectRefs =
-  fromRight Map.empty <$> runExceptT (persistLoad persistName)
+  fromMaybe Map.empty <$> mayPersistLoad persistName
 
-storeProjectRef :: RpluginName -> String -> Chromatin ()
+storeProjectRef ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadThrow m =>
+  MonadDeepError e SettingError m =>
+  MonadDeepError e PersistError m =>
+  RpluginName ->
+  Text ->
+  m ()
 storeProjectRef (RpluginName name) ref = do
   current <- loadProjectRefs
   persistStore persistName $ Map.insert name ref current
 
-gitRefFromCache :: RpluginName -> Chromatin (Maybe String)
+gitRefFromCache ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadThrow m =>
+  MonadDeepError e SettingError m =>
+  MonadDeepError e PersistError m =>
+  RpluginName ->
+  m (Maybe Text)
 gitRefFromCache (RpluginName name) = do
   refs <- loadProjectRefs
   return $ refs !? name
 
-gitRefFromRepo :: FilePath -> Chromatin (Maybe String)
+gitRefFromRepo ::
+  ∀ m.
+  MonadIO m =>
+  MonadBaseControl IO m =>
+  Path Abs Dir ->
+  m (Maybe Text)
 gitRefFromRepo path = do
-  result <- tryAny $ readProcessStdout $ proc "git" ["-C", path, "rev-parse", "HEAD"]
+  result <- try @m @SomeException $ readProcessStdout $ proc "git" ["-C", toFilePath path, "rev-parse", "HEAD"]
   return $ either (const Nothing) decode result
   where
-    decode (code, out) = if code == ExitSuccess then Just . B.unpackChars . chomp $ out else Nothing
+    decode (code, out) =
+      if code == ExitSuccess then Just . decodeUtf8 . chomp $ out else Nothing

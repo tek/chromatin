@@ -1,6 +1,4 @@
-module Config(
-  vars,
-) where
+module Config where
 
 import Neovim (toObject)
 

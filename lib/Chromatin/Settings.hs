@@ -3,8 +3,8 @@ module Chromatin.Settings(
 ) where
 
 import Chromatin.Data.RpluginConfig (RpluginConfig)
-import Data.Default.Class (Default(def))
-import Ribosome.Config.Setting
+import Data.Default (Default(def))
+import Ribosome.Data.Setting (Setting(Setting))
 
 rplugins :: Setting [RpluginConfig]
 rplugins = Setting "rplugins" True (Just def)

@@ -4,14 +4,14 @@ module Chromatin.Data.RebuildError(
 
 import System.Log (Priority(ERROR))
 
-import Ribosome.Config.Setting (SettingError)
 import Ribosome.Data.ErrorReport (ErrorReport(..))
-import Ribosome.Error.Report (ReportError(..))
+import Ribosome.Data.SettingError (SettingError)
+import Ribosome.Error.Report.Class (ReportError(..))
 
 data RebuildError =
   Setting SettingError
   |
-  Analysis String
+  Analysis Text
   deriving Show
 
 instance ReportError RebuildError where

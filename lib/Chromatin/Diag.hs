@@ -1,17 +1,20 @@
-module Chromatin.Diag(
-  crmDiag,
-) where
+module Chromatin.Diag where
 
 import Data.Functor (void)
-import Neovim (CommandArguments)
-import Ribosome.Data.ScratchOptions (defaultScratchOptions)
+import Ribosome.Data.ScratchOptions (defaultScratchOptions, scratchFocus)
+import Ribosome.Msgpack.Error (DecodeError)
 import Ribosome.Scratch (showInScratch)
-import Chromatin.Data.Chromatin (Chromatin)
 
-diagnostics :: Chromatin [String]
+diagnostics ::
+  Monad m =>
+  m [Text]
 diagnostics = return ["Diagnostics", ""]
 
-crmDiag :: CommandArguments -> Chromatin ()
-crmDiag _ = do
+crmDiag ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadDeepError e DecodeError m =>
+  m ()
+crmDiag = do
   content <- diagnostics
-  void $ showInScratch content (defaultScratchOptions "chromatin-diagnostics")
+  void $ showInScratch content (scratchFocus $ defaultScratchOptions "chromatin-diagnostics")

@@ -1,38 +1,35 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE OverloadedStrings #-}
 
-module Chromatin.Plugin(
-  plugin,
-)
-where
+module Chromatin.Plugin where
 
-import UnliftIO.STM (TVar)
-import Neovim (
-  Plugin(..),
-  command',
-  Neovim,
-  StartupConfig,
-  NeovimConfig,
-  NeovimPlugin,
-  wrapPlugin,
-  )
+import Data.Default (def)
+import Neovim (Neovim, NeovimPlugin, Plugin(..), wrapPlugin)
 import Ribosome.Control.Ribosome (Ribosome)
-import Chromatin.Init (initialize)
+import Ribosome.Error.Report (reportError)
+import Ribosome.Plugin (RpcDef, cmd, riboPlugin, rpcHandler)
+
+import Chromatin.Data.Chromatin (ChromatinN)
 import Chromatin.Data.Env (Env)
+import Chromatin.Data.Error (Error)
 import Chromatin.Diag (crmDiag)
+import Chromatin.Init (initialize)
 import Chromatin.Rebuild (crmRebuild)
 
-plugin' :: Ribosome (TVar Env) -> Plugin (Ribosome (TVar Env))
-plugin' env =
-  Plugin {
-    environment = env,
-    exports = [
-      $(command' 'crmDiag) [],
-      $(command' 'crmRebuild) []
-    ]
-  }
+handleError :: Error -> ChromatinN ()
+handleError =
+  reportError "chromatin"
 
-plugin :: Neovim (StartupConfig NeovimConfig) NeovimPlugin
-plugin = do
-  env <- initialize
-  wrapPlugin $ plugin' env
+rpcHandlers :: [[RpcDef ChromatinN]]
+rpcHandlers =
+  [
+    $(rpcHandler (cmd []) 'crmDiag),
+    $(rpcHandler (cmd []) 'crmRebuild)
+    ]
+
+plugin' :: Ribosome Env -> Plugin (Ribosome Env)
+plugin' env =
+  riboPlugin "chromatin" env rpcHandlers def handleError def
+
+plugin :: Neovim e NeovimPlugin
+plugin =
+  wrapPlugin . plugin' =<< initialize

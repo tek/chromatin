@@ -1,12 +1,12 @@
-module Chromatin.Data.Chromatin(
-  Chromatin,
-  ChromatinE,
-) where
+module Chromatin.Data.Chromatin where
+
+import Ribosome.Control.Monad.Ribo (ConcNvimS, Ribo, RiboE)
+import Ribosome.Orphans ()
 
 import Chromatin.Data.Env (Env)
-import Ribosome.Control.Monad.RiboE (RiboE)
-import Ribosome.Control.Ribo (Ribo)
-import UnliftIO.STM (TVar)
+import Chromatin.Data.Error (Error)
 
-type Chromatin a = Ribo (TVar Env) a
-type ChromatinE a = RiboE Env a
+type EnvN = ConcNvimS Env
+type Chromatin a = Ribo Env EnvN a
+type ChromatinE e m a = RiboE Env e m a
+type ChromatinN = RiboE Env Error EnvN

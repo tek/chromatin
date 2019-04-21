@@ -3,7 +3,7 @@ module Chromatin.Data.RpluginState(
 ) where
 
 data RpluginState =
-  Broken String
+  Broken Text
   |
   Ready
   |

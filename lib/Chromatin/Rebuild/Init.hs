@@ -1,68 +1,104 @@
-module Chromatin.Rebuild.Init(
-  initializeRplugins,
-) where
+module Chromatin.Rebuild.Init where
 
 import Control.Monad (when)
-import Data.Default.Class (def)
 import Data.Foldable (traverse_)
-import Data.Functor (void)
 import Data.Maybe (catMaybes)
-import Neovim (NeovimException, vim_call_function, vim_command')
-import Ribosome.Api.Exists (waitForFunction)
+import Ribosome.Api.Exists (Retry(Retry), waitForFunctionResult)
 import qualified Ribosome.Api.Exists as Exists (function)
+import Ribosome.Data.Text (capitalize)
 import Ribosome.Error.Report (reportError)
+import Ribosome.Nvim.Api.IO (vimCallFunction, vimCommand)
+import Ribosome.Nvim.Api.RpcCall (RpcError)
 
 import Chromatin.Data.ActiveRplugin (ActiveRplugin(ActiveRplugin))
-import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
-import Chromatin.Data.String (capitalize)
 
-activeRpluginName :: ActiveRplugin -> String
+activeRpluginName :: ActiveRplugin -> Text
 activeRpluginName (ActiveRplugin _ (Rplugin (RpluginName rpluginName) _)) = rpluginName
 
-pluginRpcName :: String -> ActiveRplugin -> String
+pluginRpcName :: Text -> ActiveRplugin -> Text
 pluginRpcName rpcName rplugin =
-  capitalize (activeRpluginName rplugin) ++ rpcName
+  capitalize (activeRpluginName rplugin) <> rpcName
 
-waitForPlugin :: ActiveRplugin -> Chromatin (Maybe ActiveRplugin)
+waitForPlugin ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  ActiveRplugin ->
+  m (Maybe ActiveRplugin)
 waitForPlugin rplugin = do
-  result <- waitForFunction (pluginRpcName "Poll" rplugin) def
+  result <- waitForFunctionResult (pluginRpcName "Poll" rplugin) True (Retry 6 0.1)
   case result of
     Right _ -> return $ Just rplugin
     Left _ -> do
-      reportError "rebuild-init" $ "poll function of `" ++ activeRpluginName rplugin ++ "` did not appear"
+      reportError "rebuild-init" $ "poll function of `" <> activeRpluginName rplugin <> "` did not appear"
       return Nothing
 
-stageError :: ActiveRplugin -> Int -> NeovimException -> Chromatin ()
+stageError ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  ActiveRplugin ->
+  Int ->
+  RpcError ->
+  m ()
 stageError rplugin stage err =
-  reportError "rebuild-init" $ "error in stage " ++ show stage ++ " of `" ++ name ++ "`" ++ show err
+  reportError "rebuild-init" $ "error in stage " <> show stage <> " of `" <> name <> "`" <> show err
   where
     name = activeRpluginName rplugin
 
-runStage :: ActiveRplugin -> Int -> String -> Chromatin ()
-runStage rplugin stage func = do
-  result <- void <$> vim_call_function func []
-  either (stageError rplugin stage) return result
+runStage ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  ActiveRplugin ->
+  Int ->
+  Text ->
+  m ()
+runStage rplugin stage func =
+  catchAt (stageError rplugin stage) (vimCallFunction func [])
 
-runStageInRpluginIfExists :: Int -> ActiveRplugin -> Chromatin ()
+runStageInRpluginIfExists ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  Int ->
+  ActiveRplugin ->
+  m ()
 runStageInRpluginIfExists stage rplugin = do
   exists <- Exists.function func
   when exists $ runStage rplugin stage func
   where
-    func = pluginRpcName ("Stage" ++ show stage) rplugin
+    func = pluginRpcName ("Stage" <> show stage) rplugin
 
-runStageInRplugins :: [ActiveRplugin] -> Int -> Chromatin ()
+runStageInRplugins ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  [ActiveRplugin] ->
+  Int ->
+  m ()
 runStageInRplugins rplugins stage =
   traverse_ (runStageInRpluginIfExists stage) rplugins
 
-runStages :: [ActiveRplugin] -> Chromatin ()
+runStages ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  [ActiveRplugin] ->
+  m ()
 runStages rplugins =
   traverse_ (runStageInRplugins rplugins) [1..5]
 
-initializeRplugins :: [ActiveRplugin] -> Chromatin ()
+initializeRplugins ::
+  MonadRibo m =>
+  NvimE e m =>
+  MonadIO m =>
+  [ActiveRplugin] ->
+  m ()
 initializeRplugins rplugins = do
   results <- traverse waitForPlugin rplugins
   let crmPlugins = catMaybes results
   runStages crmPlugins
-  vim_command' "silent! doautocmd User ChromatinInitialized"
+  vimCommand "silent! doautocmd User ChromatinInitialized"

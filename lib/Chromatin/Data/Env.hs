@@ -1,27 +1,21 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Chromatin.Data.Env(
-  Env(..),
-  _rplugins,
-  _errors,
-  _installerChan,
-) where
+module Chromatin.Data.Env where
 
-import Control.Concurrent.STM.TBMChan (TBMChan)
-import Control.Lens (makeClassy_)
-import Data.Default.Class (Default(def))
-import Ribosome.Data.Errors (Errors)
-import Chromatin.Data.Rplugin (Rplugin)
 import Chromatin.Data.RebuildControl (RebuildControl)
+import Chromatin.Data.Rplugin (Rplugin)
+import Control.Concurrent.STM.TBMChan (TBMChan)
+import Data.Default (Default(def))
+import Ribosome.Data.Errors (Errors)
 
 data Env =
   Env {
-    rplugins :: [Rplugin],
-    errors :: Errors,
-    installerChan :: Maybe (TBMChan RebuildControl)
+    _rplugins :: [Rplugin],
+    _errors :: Errors,
+    _installerChan :: Maybe (TBMChan RebuildControl)
   }
 
-makeClassy_ ''Env
+deepLenses ''Env
 
 instance Default Env where
   def = Env def def def

@@ -3,7 +3,7 @@ module Chromatin.Data.Rplugins(
 ) where
 
 import Chromatin.Data.RpluginConfig (RpluginConfig)
-import Data.Default.Class (Default)
+import Data.Default (Default)
 import GHC.Generics (Generic)
 
 newtype Rplugins =

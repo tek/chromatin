@@ -15,31 +15,38 @@ extra-source-files:
 - README.md
 
 dependencies:
-- base >= 4.7 && < 5
-- ribosome >= 0.1.2
-- nvim-hs
-- unliftio-core
-- unliftio
-- data-default-class
-- lens
-- hslogger
-- deepseq
-- messagepack
-- prettyprinter
-- containers
-- parsec
-- conduit
-- stm-conduit
-- stm-chans
-- resourcet
-- bytestring
-- typed-process
-- filepath
-- directory
-- split
-- messagepack
-- transformers
 - Glob
+- base-noprelude >= 4.7 && < 5
+- bytestring
+- conduit
+- containers
+- cornea
+- data-default
+- deepseq
+- directory
+- exceptions
+- filepath
+- hslogger
+- lens
+- lifted-base
+- messagepack
+- monad-control
+- nvim-hs
+- parsec
+- path
+- path-io
+- prettyprinter
+- relude
+- resourcet
+- ribosome
+- ribosome-test
+- split
+- stm-chans
+- stm-conduit
+- transformers
+- typed-process
+- unliftio
+- unliftio-core
 
 default-extensions:
 - AutoDeriveTypeable
@@ -72,6 +79,7 @@ default-extensions:
 - PartialTypeSignatures
 - PatternGuards
 - PolyKinds
+- QuasiQuotes
 - RankNTypes
 - RecordWildCards
 - ScopedTypeVariables
