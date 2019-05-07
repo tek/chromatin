@@ -1,5 +1,7 @@
-#!/bin/sh
+#!/bin/bash --norc
+
+set -e
 
 f=$(mktemp -d)/install-stack.sh
 curl -sSL https://get.haskellstack.org/ > $f
-sh -- $f --dest $HOME/.local/bin
+bash --norc -- $f --dest $HOME/.local/bin
