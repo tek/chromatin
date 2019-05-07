@@ -37,7 +37,7 @@ function! s:job(cmd, output, next, error) abort "{{{
         \ 'cwd': s:plugin_base },
         \ )
   sleep 100m
-  execute 'belowright 15split term://tail -f ' . output
+  execute 'belowright 15split term://tail -F ' . output
   let s:termbuf = bufnr('%')
   silent! normal! G
   silent! wincmd w
@@ -74,7 +74,6 @@ function! s:install_chromatin(stack) abort "{{{
 endfunction "}}}
 
 function! s:install_stack() abort "{{{
-  sleep 1
   echom 'chromatin: installing stack…'
   return s:job(
         \ s:install_stack_cmd,
@@ -127,7 +126,7 @@ function! s:read_current_ref() abort "{{{
   endtry
 endfunction "}}}
 
-function! s:unsafe_check_git_ref() abort "{{{
+function! s:check_git_ref() abort "{{{
   try
     let stored_ref = filereadable(s:ref_file) ? get(readfile(s:ref_file), 0, '') : ''
     return !empty(s:current_ref) && stored_ref == s:current_ref
@@ -136,8 +135,8 @@ function! s:unsafe_check_git_ref() abort "{{{
   endtry
 endfunction "}}}
 
-function! s:check_git_ref(stack) abort "{{{
-  if s:unsafe_check_git_ref()
+function! s:run_if_git_current(stack) abort "{{{
+  if s:check_git_ref()
     return s:run_chromatin(a:stack, 1)
   else
     call s:check_executable(a:stack)
@@ -161,7 +160,7 @@ function! s:bootstrap() abort "{{{
   call system('mkdir ' . s:tempdir)
   let stack = s:find_stack()
   if len(stack) > 0
-    return s:check_git_ref(stack)
+    return s:run_if_git_current(stack)
   else
     return s:install_stack()
   endif

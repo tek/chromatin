@@ -1,5 +1,5 @@
 #!/bin/sh
 
-f=$(mktemp -d)/install-stack
+f=$(mktemp -d)/install-stack.sh
 curl -sSL https://get.haskellstack.org/ > $f
 sh -- $f --dest $HOME/.local/bin
