@@ -74,6 +74,7 @@ function! s:install_chromatin(stack) abort "{{{
 endfunction "}}}
 
 function! s:install_stack() abort "{{{
+  sleep 1
   echom 'chromatin: installing stack…'
   return s:job(
         \ s:install_stack_cmd,
