@@ -4,22 +4,23 @@ module Chromatin.Plugin where
 
 import Data.Default (def)
 import Neovim (Neovim, NeovimPlugin, Plugin(..), wrapPlugin)
+import Ribosome.Control.Monad.Ribo (Ribo)
 import Ribosome.Control.Ribosome (Ribosome)
 import Ribosome.Error.Report (reportError)
 import Ribosome.Plugin (RpcDef, cmd, riboPlugin, rpcHandler)
 
-import Chromatin.Data.Chromatin (ChromatinN)
+import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Env (Env)
 import Chromatin.Data.Error (Error)
 import Chromatin.Diag (crmDiag)
 import Chromatin.Init (initialize)
 import Chromatin.Rebuild (crmRebuild)
 
-handleError :: Error -> ChromatinN ()
+handleError :: Error -> Chromatin ()
 handleError =
   reportError "chromatin"
 
-rpcHandlers :: [[RpcDef ChromatinN]]
+rpcHandlers :: [[RpcDef (Ribo Env Error)]]
 rpcHandlers =
   [
     $(rpcHandler (cmd []) 'crmDiag),

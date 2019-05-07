@@ -8,7 +8,7 @@ import Control.Monad.IO.Class (liftIO)
 import Path.IO (getCurrentDir)
 import Test.Framework
 
-import Chromatin.Data.Chromatin (ChromatinN)
+import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.RpluginSource (RpluginSource(Stack))
@@ -17,7 +17,7 @@ import qualified Chromatin.Rebuild.Build as InstallResult (InstallResult(Success
 import Chromatin.Test.Unit (specWithDef)
 import Config (vars)
 
-stackSpec :: ChromatinN ()
+stackSpec :: Chromatin ()
 stackSpec = do
   cwd <- getCurrentDir
   let name = RpluginName "chromatin"

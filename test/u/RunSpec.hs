@@ -12,14 +12,14 @@ import Ribosome.Test.Tmux (tmuxGuiSpecDef)
 import Test.Framework
 
 import Chromatin.Data.ActiveRplugin (ActiveRplugin(ActiveRplugin))
-import Chromatin.Data.Chromatin (ChromatinN)
+import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.RpluginSource (RpluginSource(Stack))
 import Chromatin.Run (runRplugin)
 import qualified Chromatin.Run as RunRpluginResult (RunRpluginResult(Success))
 
-runSpec :: ChromatinN ()
+runSpec :: Chromatin ()
 runSpec = do
   cwd <- getCurrentDir
   let rplugin = Rplugin (RpluginName "chromatin") (Stack cwd)

@@ -4,13 +4,13 @@ module ReloadSpec(
   htf_thisModulesTests,
 ) where
 
-import Chromatin.Data.Chromatin (ChromatinN)
+import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Test.Unit (specWithDef)
 import Config (vars)
 import Control.Monad.IO.Class (liftIO)
 import Test.Framework
 
-reloadSpec :: ChromatinN ()
+reloadSpec :: Chromatin ()
 reloadSpec =
   liftIO $ assertEqual ("" :: Text) ""
 

@@ -8,7 +8,7 @@ import Ribosome.Config.Setting (updateSetting)
 import Ribosome.System.Time (sleep)
 import Test.Framework
 
-import Chromatin.Data.Chromatin (ChromatinN)
+import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.RpluginConfig (RpluginConfig(RpluginConfig))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Rebuild (crmRebuild)
@@ -23,7 +23,7 @@ rplugins = [
   RpluginConfig "hackage:flagellum" Nothing Nothing Nothing
   ]
 
-rebuildSpec :: ChromatinN ()
+rebuildSpec :: Chromatin ()
 rebuildSpec = do
   updateSetting S.rplugins rplugins
   crmRebuild

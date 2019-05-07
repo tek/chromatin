@@ -9,7 +9,7 @@ import Data.Default (def)
 import Ribosome.Test.Embed (TestConfig(tcTimeout))
 import Test.Framework
 
-import Chromatin.Data.Chromatin (ChromatinN)
+import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(RpluginName))
 import Chromatin.Data.RpluginSource (PypiDepspec(..), RpluginSource(Pypi))
@@ -18,7 +18,7 @@ import qualified Chromatin.Rebuild.Build as InstallResult (InstallResult(Success
 import Chromatin.Test.Config (defaultTestConfig)
 import Chromatin.Test.Unit (specConfig)
 
-pypiSpec :: ChromatinN ()
+pypiSpec :: Chromatin ()
 pypiSpec = do
   let name = RpluginName "myo"
   let source = Pypi (PypiDepspec "myo~=1.0.0a")

@@ -11,7 +11,7 @@ import Ribosome.Test.Unit (tempDir)
 import System.Process.Typed (proc, readProcess_, setWorkingDir)
 import Test.Framework
 
-import Chromatin.Data.Chromatin (ChromatinN)
+import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Data.RpluginName (RpluginName(..))
 import Chromatin.Data.RpluginState (RpluginState(..))
 import Chromatin.Git (gitRefFromRepo, storeProjectRef)
@@ -35,13 +35,13 @@ addFile repoDir s = do
 name :: RpluginName
 name = RpluginName "proj"
 
-setRef :: Path Abs Dir -> ChromatinN ()
+setRef :: Path Abs Dir -> Chromatin ()
 setRef repoDir = do
   mayRef <- gitRefFromRepo repoDir
   ref <- gassertJust mayRef
   storeProjectRef name ref
 
-existingSpec :: ChromatinN ()
+existingSpec :: Chromatin ()
 existingSpec = do
   repoDirFP <- tempDir "existing/repo"
   repoDir <- parseAbsDir repoDirFP
@@ -58,7 +58,7 @@ test_existing :: IO ()
 test_existing =
   vars >>= specWithDef existingSpec
 
-noGitSpec :: ChromatinN ()
+noGitSpec :: Chromatin ()
 noGitSpec = do
   repoDirFP <- tempDir "existing/repo"
   repoDir <- parseAbsDir repoDirFP

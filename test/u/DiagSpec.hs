@@ -4,7 +4,7 @@ module DiagSpec(
   htf_thisModulesTests
 ) where
 
-import Chromatin.Data.Chromatin (ChromatinN)
+import Chromatin.Data.Chromatin (Chromatin)
 import Chromatin.Diag (crmDiag)
 import Chromatin.Test.Unit (specWithDef)
 import Config (vars)
@@ -18,7 +18,7 @@ target = [
   ""
   ]
 
-diagSpec :: ChromatinN ()
+diagSpec :: Chromatin ()
 diagSpec = do
   crmDiag
   content <- currentBufferContent
