@@ -168,6 +168,6 @@ endfunction "}}}
 
 if s:nvim_hs
   call nvimhs#start(expand('<sfile>:p:h:h'), 'chromatin', [])
-elseif get(g:, 'chromatin_autobootstrap', 1)
+elseif !get(g:, 'chromatin_disabled', 0)
   call s:bootstrap()
 endif
