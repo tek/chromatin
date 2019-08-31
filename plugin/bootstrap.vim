@@ -62,7 +62,7 @@ function! s:run_chromatin(stack, ...) abort "{{{
     echom 'chromatin: running chromatin…'
   endif
   return jobstart(
-        \ a:stack . ' exec chromatin -- -v DEBUG -l/tmp/chromatin-run-log',
+        \ a:stack . ' exec chromatin',
         \ { 'rpc': v:true, 'on_stderr': 'ChromatinJobStderr',
         \ 'cwd': s:plugin_base },
         \ )
