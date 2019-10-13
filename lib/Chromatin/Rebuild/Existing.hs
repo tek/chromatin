@@ -162,8 +162,8 @@ handleExisting ::
   m RunExistingResult
 handleExisting task@(RebuildTask name source dev _) = do
   Log.debug $ ("handling " :: Text) <> show task
-  state <- rpluginReady name source dev
-  case state of
+  status <- rpluginReady name source dev
+  case status of
     RpluginState.Ready -> runPreexisting task
     RpluginState.Incomplete -> return $ RunExistingResult.NotReady task
     RpluginState.Broken reason -> return $ RunExistingResult.Failure task [reason]

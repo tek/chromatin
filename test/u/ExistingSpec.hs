@@ -1,8 +1,7 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# LANGUAGE QuasiQuotes #-}
 
-module ExistingSpec(
-  htf_thisModulesTests,
-) where
+module ExistingSpec(htf_thisModulesTests) where
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Functor (void)
@@ -26,11 +25,11 @@ git repoDir args = liftIO $ void $ readProcess_ (setWorkingDir (toFilePath repoD
 addFile :: MonadIO m => Path Abs Dir -> Path Rel File -> m ()
 addFile repoDir s = do
   liftIO $ writeFile repoFP fileS
-  git repoDir ["add", fileS]
+  git repoDir ["add", toText fileS]
   git repoDir ["commit", "-m", "commit"]
   where
     repoFP = toFilePath (repoDir </> s)
-    fileS = (toText . toFilePath) s
+    fileS = toFilePath s
 
 name :: RpluginName
 name = RpluginName "proj"

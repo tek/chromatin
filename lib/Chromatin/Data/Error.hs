@@ -3,7 +3,6 @@
 module Chromatin.Data.Error where
 
 import Data.DeepPrisms (deepPrisms)
-import Prelude hiding (Decode)
 import Ribosome.Data.Mapping (MappingError)
 import Ribosome.Data.PersistError (PersistError)
 import Ribosome.Data.SettingError (SettingError)

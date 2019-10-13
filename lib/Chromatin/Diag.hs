@@ -11,8 +11,9 @@ diagnostics ::
 diagnostics = return ["Diagnostics", ""]
 
 crmDiag ::
-  MonadRibo m =>
   NvimE e m =>
+  MonadRibo m =>
+  MonadBaseControl IO m =>
   MonadDeepError e DecodeError m =>
   m ()
 crmDiag = do
