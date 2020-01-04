@@ -10,7 +10,7 @@ import Ribosome.Data.PersistError (PersistError)
 import Ribosome.Data.SettingError (SettingError)
 import qualified Ribosome.Log as Log (debug)
 import System.Exit (ExitCode(ExitSuccess, ExitFailure))
-import System.Process.Typed (proc, readProcessStderr, setWorkingDir)
+import System.Process.Typed (proc, readProcessStderr, setWorkingDir, shell)
 
 import Chromatin.Data.RebuildTask (RebuildTask(..))
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
@@ -36,7 +36,7 @@ unsafeStackDryRun path = do
   result <- readProcessStderr conf
   return $ lines . decodeUtf8 <$> result
   where
-    conf = setWorkingDir (toFilePath path) $ proc "stack" ["--no-install-ghc", "build", "--dry-run"]
+    conf = setWorkingDir (toFilePath path) $ shell "unset STACK_IN_NIX_SHELL; stack --no-install-ghc build --dry-run"
 
 stackDryRun ::
   MonadIO m =>

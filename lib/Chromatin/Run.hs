@@ -56,7 +56,7 @@ runRpluginStack ::
   m (Either Text Int)
 runRpluginStack (RpluginName name) path debug = do
   createDirIfMissing False [absdir|/tmp/chromatin-debug|]
-  jobstart [toMsgpack $ "stack exec " <> name <> logParam, toMsgpack opts]
+  jobstart [toMsgpack $ "unset STACK_IN_NIX_SHELL; stack exec " <> name <> logParam, toMsgpack opts]
   where
     opts = Map.fromList [
       ("cwd" :: ByteString, toMsgpack (toFilePath path)),

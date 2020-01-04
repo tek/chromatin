@@ -20,7 +20,7 @@ import qualified Ribosome.Log as Log (debug)
 import Ribosome.Nvim.Api.Data (Buffer)
 import Ribosome.Nvim.Api.IO (bufferGetNumber, vimCommand, vimGetCurrentBuffer)
 import System.Directory (removePathForcibly)
-import System.Process.Typed (ProcessConfig, proc, runProcess, setStderr, setStdout, setWorkingDir, useHandleClose)
+import System.Process.Typed (ProcessConfig, proc, runProcess, setStderr, setStdout, setWorkingDir, shell, useHandleClose)
 
 import Chromatin.Data.Rplugin (Rplugin(Rplugin))
 import Chromatin.Data.RpluginName (RpluginName(..))
@@ -69,7 +69,7 @@ hackageProcess bindir (HackageDepspec spec) =
 
 stackProcess :: Path Abs Dir -> ProcessConfig () () ()
 stackProcess path =
-  setWorkingDir (toFilePath path) $ proc "stack" ["build"]
+  setWorkingDir (toFilePath path) $ shell "unset STACK_IN_NIX_SHELL; stack build"
 
 processWithLog ::
   MonadRibo m =>
