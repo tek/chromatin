@@ -1,0 +1,42 @@
+name: chromatin
+synopsis: neovim package manager
+<<: !include shared/meta.yaml
+defaults:
+  local: shared/defaults.yaml
+
+extra-source-files:
+  - readme.md
+  - changelog.md
+
+dependencies:
+  - Glob
+  - conduit
+  - deepseq
+  - exceptions
+  - hslogger
+  - messagepack
+  - parsec
+  - prettyprinter
+  - resourcet
+  - split
+  - stm-chans
+  - stm-conduit
+  - string-interpolate
+  - template-haskell
+  - typed-process
+  - unliftio
+  - unliftio-core
+
+library:
+ source-dirs: lib
+
+executables:
+ chromatin:
+  main: Main.hs
+  source-dirs: app
+  ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+  dependencies:
+    - chromatin

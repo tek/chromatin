@@ -1,0 +1,10 @@
+version: 0.1.1.0
+description: Please see the README on GitHub at <https://github.com/tek/chromatin>
+github: tek/chromatin
+license: BSD-2-Clause-Patent
+license-file: LICENSE
+author: Torsten Schmits
+maintainer: tek@tryp.io
+copyright: 2021 Torsten Schmits
+category: Neovim
+build-type: Simple
