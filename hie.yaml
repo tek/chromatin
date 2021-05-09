@@ -1,0 +1,10 @@
+cradle:
+  cabal:
+    - path: "./packages/chromatin/lib"
+      component: "lib:chromatin"
+
+    - path: "./packages/chromatin/app"
+      component: "chromatin:exe:chromatin"
+
+    - path: "./packages/chromatin-test/test"
+      component: "chromatin-test:test:chromatin-unit"
