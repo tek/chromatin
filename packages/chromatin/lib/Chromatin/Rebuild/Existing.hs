@@ -2,7 +2,6 @@ module Chromatin.Rebuild.Existing where
 
 import Control.Exception.Lifted (IOException, try)
 import Control.Monad.Catch (MonadThrow)
-import qualified Data.ByteString as ByteString
 import Path (Abs, Dir, Path, relfile, toFilePath, (</>))
 import Path.IO (doesFileExist, isLocationOccupied)
 import Ribosome.Data.PersistError (PersistError)
