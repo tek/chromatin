@@ -36,7 +36,7 @@
         type = "app";
         program = "${outputs.packages.chromatin}/bin/chromatin";
       };
-      defaultApp = apps.chromatin;
+      apps.default = apps.chromatin;
     };
   };
 }
